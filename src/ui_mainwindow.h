@@ -133,6 +133,7 @@ public:
 
         btnDoMove = new QPushButton(centralwidget);
         btnDoMove->setObjectName(QStringLiteral("btnDoMove"));
+        btnDoMove->setEnabled(false);
 
         gridLayout_2->addWidget(btnDoMove, 1, 1, 1, 1);
 

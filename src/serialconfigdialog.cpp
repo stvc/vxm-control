@@ -22,6 +22,10 @@ SerialConfigDialog::~SerialConfigDialog()
     delete ui;
 }
 
+bool SerialConfigDialog::getHasBeenConfigured() {
+    return hasBeenConfigured;
+}
+
 VXMController::SerialSettings SerialConfigDialog::getSerialSettings() const {
     return currentSettings;
 }

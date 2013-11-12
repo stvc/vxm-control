@@ -4,21 +4,32 @@ VXMController::VXMController(QObject *parent) :
     QObject(parent)
 {
    serialConnection = new QSerialPort();
+   xStepsPerUnit = 1;
+   yStepsPerUnit = 1;
+   isConnected = false;
 }
 
 void VXMController::openSerialConnection(SerialSettings s) {
+    isConnected = true;
     emit serialConnected();
 }
 
 void VXMController::closeSerialConnection() {
+    isConnected = false;
     emit serialDisconnected();
 }
 
-void VXMController::moveUp(int steps) {
+bool VXMController::isSerialOpen() {
+    return isConnected;
 }
-void VXMController::moveDown(int steps) {
+
+void VXMController::move(Direction d, int units) {
 }
-void VXMController::moveLeft(int steps) {
+
+void VXMController::setXStepsPerUnit(double steps) {
+    this->xStepsPerUnit = steps;
 }
-void VXMController::moveRight(int steps) {
+
+void VXMController::setYStepsPerUnit(double steps) {
+    this->yStepsPerUnit = steps;
 }

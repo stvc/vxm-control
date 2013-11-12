@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "serialconfigdialog.h"
+#include "vxmcontroller.h"
 #include <QMainWindow>
 #include <QLabel>
 
@@ -20,11 +21,15 @@ public:
 private slots:
     void on_actionSerialConfig_triggered();
     void on_btnConnect_clicked();
+    void controller_connected();
+    void controller_disconnected();
 
 private:
+
     Ui::MainWindow *ui;
     SerialConfigDialog *serialdialog;
     QLabel *labelConnectionStatus;
+    VXMController *controller;
 };
 
 #endif

@@ -9,6 +9,7 @@ class VXMController : public QObject {
     Q_OBJECT
 
 public:
+    enum Direction { UP, DOWN, LEFT, RIGHT };
     struct SerialSettings {
         QString portName;
         qint32 baudRate;
@@ -22,10 +23,10 @@ public:
 
     void openSerialConnection(SerialSettings settings);
     void closeSerialConnection();
-    void moveUp(int);
-    void moveDown(int);
-    void moveLeft(int);
-    void moveRight(int);
+    void move(Direction, int);
+    void setXStepsPerUnit(double);
+    void setYStepsPerUnit(double);
+    bool isSerialOpen();
 
 signals:
     void serialConnected();
@@ -33,6 +34,9 @@ signals:
 
 private:
     QSerialPort *serialConnection;
+    double xStepsPerUnit;
+    double yStepsPerUnit;
+    bool isConnected;
 };
 
 #endif
