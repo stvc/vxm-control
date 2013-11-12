@@ -10,6 +10,7 @@ SerialConfigDialog::SerialConfigDialog(QWidget *parent) :
     ui->setupUi(this);
     hasBeenConfigured = false;
 
+    ui->cbPort->addItem("");
     foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
         ui->cbPort->addItem(info.portName());
     }
@@ -31,10 +32,21 @@ VXMController::SerialSettings SerialConfigDialog::getSerialSettings() const {
 }
 
 void SerialConfigDialog::on_buttonBox_accepted() {
-    hasBeenConfigured = true;
+    if (ui->cbPort->currentText != "") {
+        hasBeenConfigured = true;
+        updateSettings();
+    }
 }
 
 void SerialConfigDialog::on_buttonBox_rejected() {
+}
+
+void SerialConfigDialog::on_cbPort_currentTextChanged() {
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+        if (info.portName() == ui->cbPort->currentText()) {
+            ui->labelPortInfo->setText(info.description());
+        }
+    }
 }
 
 void SerialConfigDialog::updateSettings() {
