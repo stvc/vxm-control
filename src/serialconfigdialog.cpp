@@ -22,11 +22,12 @@ SerialConfigDialog::~SerialConfigDialog()
     delete ui;
 }
 
-SerialConfigDialog::SerialSettings SerialConfigDialog::getSerialSettings() const {
+VXMController::SerialSettings SerialConfigDialog::getSerialSettings() const {
     return currentSettings;
 }
 
 void SerialConfigDialog::on_buttonBox_accepted() {
+    hasBeenConfigured = true;
 }
 
 void SerialConfigDialog::on_buttonBox_rejected() {

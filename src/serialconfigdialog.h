@@ -1,6 +1,7 @@
 #ifndef SERIALCONFIGDIALOG_H
 #define SERIALCONFIGDIALOG_H
 
+#include "vxmcontroller.h"
 #include <QDialog>
 #include <QtSerialPort/QSerialPort>
 
@@ -12,20 +13,11 @@ class SerialConfigDialog : public QDialog
 {
     Q_OBJECT
 
-    struct SerialSettings {
-        QString portName;
-        qint32 baudRate;
-        QSerialPort::DataBits dataBits;
-        QSerialPort::Parity parity;
-        QSerialPort::StopBits stopBits;
-        QSerialPort::FlowControl flowControl;
-    };
-
 public:
     explicit SerialConfigDialog(QWidget *parent = 0);
     ~SerialConfigDialog();
 
-    SerialSettings getSerialSettings() const;
+    VXMController::SerialSettings getSerialSettings() const;
 
 private slots:
     void on_buttonBox_accepted();
@@ -37,7 +29,7 @@ private:
 private:
     Ui::SerialConfigDialog *ui;
     bool hasBeenConfigured;
-    SerialSettings currentSettings;
+    VXMController::SerialSettings currentSettings;
 };
 
 #endif // SERIALCONFIGDIALOG_H

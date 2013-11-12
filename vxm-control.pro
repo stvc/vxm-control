@@ -1,8 +1,8 @@
 QT += core gui widgets serialport
 
-SOURCES += src/main.cpp src/mainwindow.cpp src/serialconfigdialog.cpp
+SOURCES += src/main.cpp src/mainwindow.cpp src/serialconfigdialog.cpp src/vxmcontroller.cpp
 
-HEADERS += src/mainwindow.h src/serialconfigdialog.h
+HEADERS += src/mainwindow.h src/serialconfigdialog.h src/vxmcontroller.h
 
 FORMS += src/mainwindow.ui src/serialconfigdialog.ui
 
