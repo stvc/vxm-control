@@ -21,8 +21,12 @@ public:
 private slots:
     void on_actionSerialConfig_triggered();
     void on_btnConnect_clicked();
+    void on_btnDoMove_clicked();
+
     void controller_connected();
     void controller_disconnected();
+    void controller_ready();
+    void controller_busy();
 
 private:
 

@@ -32,7 +32,7 @@ VXMController::SerialSettings SerialConfigDialog::getSerialSettings() const {
 }
 
 void SerialConfigDialog::on_buttonBox_accepted() {
-    if (ui->cbPort->currentText != "") {
+    if (ui->cbPort->currentText() != "") {
         hasBeenConfigured = true;
         updateSettings();
     }

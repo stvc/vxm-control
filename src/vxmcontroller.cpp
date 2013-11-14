@@ -7,11 +7,14 @@ VXMController::VXMController(QObject *parent) :
    xStepsPerUnit = 1;
    yStepsPerUnit = 1;
    isConnected = false;
+
+   connect(serialConnection, SIGNAL(readyRead()), this, SLOT(serialReadyReadSlot()));
 }
 
 void VXMController::openSerialConnection(SerialSettings s) {
     isConnected = true;
     emit serialConnected();
+    emit serialReady();
 }
 
 void VXMController::closeSerialConnection() {
@@ -24,6 +27,7 @@ bool VXMController::isSerialOpen() {
 }
 
 void VXMController::move(Direction d, int units) {
+    emit serialBusy();
 }
 
 void VXMController::setXStepsPerUnit(double steps) {
@@ -32,4 +36,14 @@ void VXMController::setXStepsPerUnit(double steps) {
 
 void VXMController::setYStepsPerUnit(double steps) {
     this->yStepsPerUnit = steps;
+}
+
+void VXMController::serialReadyReadSlot() {
+    QByteArray data = "";
+    while (!serialConnection->atEnd()) {
+        data += serialConnection->read(20);
+    }
+    if (data == "^") {
+        emit serialReady();
+    }
 }

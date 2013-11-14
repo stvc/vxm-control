@@ -48,7 +48,7 @@ public:
     QRadioButton *radioDown;
     QRadioButton *radioUp;
     QGridLayout *gridLayout_2;
-    QSpinBox *spinBox;
+    QSpinBox *spinBoxSteps;
     QLabel *label;
     QPushButton *btnDoMove;
     QLabel *labelDraw;
@@ -119,12 +119,12 @@ public:
 
         gridLayout_2 = new QGridLayout();
         gridLayout_2->setObjectName(QStringLiteral("gridLayout_2"));
-        spinBox = new QSpinBox(centralwidget);
-        spinBox->setObjectName(QStringLiteral("spinBox"));
-        spinBox->setMaximum(999);
-        spinBox->setSingleStep(1);
+        spinBoxSteps = new QSpinBox(centralwidget);
+        spinBoxSteps->setObjectName(QStringLiteral("spinBoxSteps"));
+        spinBoxSteps->setMaximum(999);
+        spinBoxSteps->setSingleStep(1);
 
-        gridLayout_2->addWidget(spinBox, 0, 1, 1, 1);
+        gridLayout_2->addWidget(spinBoxSteps, 0, 1, 1, 1);
 
         label = new QLabel(centralwidget);
         label->setObjectName(QStringLiteral("label"));
