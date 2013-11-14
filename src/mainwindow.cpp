@@ -25,6 +25,9 @@ MainWindow::~MainWindow()
 }
 
 void MainWindow::on_actionSerialConfig_triggered() {
+    if (controller->isSerialOpen()) {
+        controller->closeSerialConnection();
+    }
     if (serialdialog->exec()) {
     }
 }
