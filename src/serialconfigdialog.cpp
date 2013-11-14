@@ -10,11 +10,6 @@ SerialConfigDialog::SerialConfigDialog(QWidget *parent) :
     ui->setupUi(this);
     hasBeenConfigured = false;
 
-    ui->cbPort->addItem("");
-    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
-        ui->cbPort->addItem(info.portName());
-    }
-
     updateSettings();
 }
 
@@ -23,6 +18,17 @@ SerialConfigDialog::~SerialConfigDialog()
     delete ui;
 }
 
+int SerialConfigDialog::exec() {
+    ui->cbPort->clear();
+    ui->cbPort->addItem("");
+    foreach (const QSerialPortInfo &info, QSerialPortInfo::availablePorts()) {
+        ui->cbPort->addItem(info.portName());
+    }
+    ui->cbPort->setCurrentText(currentSettings.portName);
+    if (ui->cbPort->currentText() == "")
+        ui->labelPortInfo->setText("");
+    return QDialog::exec();
+}
 bool SerialConfigDialog::getHasBeenConfigured() {
     return hasBeenConfigured;
 }

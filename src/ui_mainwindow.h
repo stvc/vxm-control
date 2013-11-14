@@ -111,6 +111,7 @@ public:
 
         radioUp = new QRadioButton(centralwidget);
         radioUp->setObjectName(QStringLiteral("radioUp"));
+        radioUp->setChecked(true);
 
         gridLayout->addWidget(radioUp, 0, 1, 1, 1);
 

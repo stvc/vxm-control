@@ -17,6 +17,8 @@ public:
     explicit SerialConfigDialog(QWidget *parent = 0);
     ~SerialConfigDialog();
 
+    int exec();
+
     bool getHasBeenConfigured();
     VXMController::SerialSettings getSerialSettings() const;
 
