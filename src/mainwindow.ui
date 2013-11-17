@@ -170,7 +170,14 @@
      </layout>
     </item>
     <item>
-     <widget class="QGraphicsView" name="cameraFeed"/>
+     <widget class="QStackedWidget" name="stackedWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="page">
+       <layout class="QHBoxLayout" name="horizontalLayout_2"/>
+      </widget>
+     </widget>
     </item>
    </layout>
   </widget>

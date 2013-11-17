@@ -12,11 +12,19 @@ MainWindow::MainWindow(QWidget *parent) :
     labelConnectionStatus->setMinimumWidth(200);
     ui->statusbar->addPermanentWidget(labelConnectionStatus);
 
+    QList<QByteArray> cameraDevices = QCamera::availableDevices();
+    camera = new QCamera(cameraDevices.first());
+    viewFinder = new QCameraViewfinder();
+    camera->setViewfinder(viewFinder);
+    this->ui->horizontalLayout_2->addWidget(viewFinder);
+
     controller = new VXMController();
     connect(controller, SIGNAL(serialConnected()), this, SLOT(controller_connected()));
     connect(controller, SIGNAL(serialDisconnected()), this, SLOT(controller_disconnected()));
     connect(controller, SIGNAL(serialReady()), this, SLOT(controller_ready()));
     connect(controller, SIGNAL(serialBusy()), this, SLOT(controller_busy()));
+
+    connect(camera, SIGNAL(error(QCamera::Error)), this, SLOT(camera_error(QCamera::Error)));
 }
 
 MainWindow::~MainWindow()
@@ -77,3 +85,12 @@ void MainWindow::controller_ready() {
 void MainWindow::controller_busy() {
     this->ui->btnDoMove->setEnabled(false);
 }
+
+void MainWindow::camera_error(QCamera::Error e) {
+    this->ui->statusbar->showMessage("camera error");
+}
+
+void MainWindow::on_btnDrawLine_clicked() {
+    camera->start();
+}
+

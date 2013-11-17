@@ -1,4 +1,4 @@
-QT += core gui widgets serialport
+QT += core gui widgets multimedia multimediawidgets serialport
 
 SOURCES += src/main.cpp src/mainwindow.cpp src/serialconfigdialog.cpp src/vxmcontroller.cpp
 
