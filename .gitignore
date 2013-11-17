@@ -1,6 +1,6 @@
 .clang_complete
 debug/*
 release/*
-Makefile
+Makefile*
 *.swp
 ui_*.h
