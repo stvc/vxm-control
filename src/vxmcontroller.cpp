@@ -41,6 +41,10 @@ bool VXMController::isSerialOpen() {
     return isConnected;
 }
 
+bool VXMController::hasControllerBeenCalibrated() {
+    return hasBeenCalibrated;
+}
+
 void VXMController::move(Direction d, int units) {
     emit serialBusy();
     QByteArray data("F I");
@@ -76,10 +80,12 @@ void VXMController::move(Direction d, int units) {
 
 void VXMController::setXStepsPerUnit(double steps) {
     this->xStepsPerUnit = steps;
+    hasBeenCalibrated = true;
 }
 
 void VXMController::setYStepsPerUnit(double steps) {
     this->yStepsPerUnit = steps;
+    hasBeenCalibrated = true;
 }
 
 void VXMController::serialReadyReadSlot() {

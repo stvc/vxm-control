@@ -27,6 +27,7 @@ public:
     void setXStepsPerUnit(double);
     void setYStepsPerUnit(double);
     bool isSerialOpen();
+    bool hasControllerBeenCalibrated();
 
 signals:
     void serialConnected();
@@ -42,6 +43,7 @@ private:
     double xStepsPerUnit;
     double yStepsPerUnit;
     bool isConnected;
+    bool hasBeenCalibrated;
 };
 
 #endif
