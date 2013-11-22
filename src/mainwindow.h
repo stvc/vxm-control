@@ -37,6 +37,7 @@ private slots:
 
 private:
     void toggleManualControls(bool);
+    void refreshMoveBtnState();
 
     Ui::MainWindow *ui;
     SerialConfigDialog *serialDialog;

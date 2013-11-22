@@ -75,14 +75,12 @@ void MainWindow::on_btnGrpDrawType_buttonClicked(int id) {
     switch (id) {
         case DRAW_MANUAL:
             toggleManualControls(true);
-            if (controller->isSerialOpen())
-                this->ui->btnDoMove->setEnabled(true);
             break;
         default:
             toggleManualControls(false);
-            this->ui->btnDoMove->setEnabled(false);
             break;
     }
+    refreshMoveBtnState();
 }
 
 void MainWindow::on_btnDoMove_clicked() {
@@ -106,13 +104,12 @@ void MainWindow::controller_connected() {
 
 void MainWindow::controller_disconnected() {
     this->ui->btnConnect->setText("Connect");
-    this->ui->btnDoMove->setEnabled(false);
+    refreshMoveBtnState();
     this->labelConnectionStatus->setText("Status: Not Connected");
 }
 
 void MainWindow::controller_ready() {
-    if (this->ui->radioDrawManual->isChecked())
-        this->ui->btnDoMove->setEnabled(true);
+    refreshMoveBtnState();
 }
 
 void MainWindow::controller_busy() {
@@ -132,3 +129,16 @@ void MainWindow::toggleManualControls(bool b) {
     ui->labelSteps->setEnabled(b);
 }
 
+void MainWindow::refreshMoveBtnState() {
+    this->ui->btnDoMove->setEnabled(false);
+
+    // do nothing if controller isn't connected
+    if (!this->controller->isSerialOpen())
+        return;
+    // do nothing if controller hasn't been calibrated
+    if (!this->controller->hasControllerBeenCalibrated())
+        return;
+    // make sure that either user is moving manually, or user has drawn a shape
+    if (shapeDrawn || this->ui->radioDrawManual->isChecked())
+        this->ui->btnDoMove->setEnabled(true);
+}
