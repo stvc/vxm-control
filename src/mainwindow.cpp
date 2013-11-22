@@ -4,9 +4,9 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow)
-    shapeStart(0,0);
-    shapeEnd(0,0);
+    ui(new Ui::MainWindow),
+    shapeStart(0,0),
+    shapeEnd(0,0)
 {
     ui->setupUi(this);
     serialDialog = new SerialConfigDialog(this);
