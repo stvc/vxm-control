@@ -10,6 +10,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     serialDialog = new SerialConfigDialog(this);
+    cameraDialog = new CameraConfigDialog(this);
     labelConnectionStatus = new QLabel("Status: Not Connected");
     labelConnectionStatus->setMinimumWidth(200);
     ui->statusbar->addPermanentWidget(labelConnectionStatus);
@@ -55,6 +56,17 @@ void MainWindow::on_actionSerialConfig_triggered() {
         controller->closeSerialConnection();
     }
     if (serialDialog->exec()) {
+    }
+}
+
+void MainWindow::on_actionCameraConfig_triggered() {
+    if (cameraDialog->exec()) {
+        camera->stop();
+        if (cameraDialog->getDevice().length() > 0) {
+            camera = new QCamera(cameraDialog->getDevice());
+            camera->setViewfinder(viewFinder);
+            camera->start();
+        }
     }
 }
 

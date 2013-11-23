@@ -1,6 +1,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "cameraconfigdialog.h"
 #include "serialconfigdialog.h"
 #include "vxmcontroller.h"
 #include <QMainWindow>
@@ -24,6 +25,7 @@ public:
 
 private slots:
     void on_actionSerialConfig_triggered();
+    void on_actionCameraConfig_triggered();
     void on_btnConnect_clicked();
     void on_btnDoMove_clicked();
     void on_btnGrpDrawType_buttonClicked(int);
@@ -41,6 +43,7 @@ private:
 
     Ui::MainWindow *ui;
     SerialConfigDialog *serialDialog;
+    CameraConfigDialog *cameraDialog;
 
     QCamera *camera;
     QCameraViewfinder *viewFinder;
