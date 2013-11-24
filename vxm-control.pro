@@ -1,8 +1,8 @@
 QT += core gui widgets multimedia multimediawidgets serialport
 
-SOURCES += src/main.cpp src/mainwindow.cpp src/serialconfigdialog.cpp src/vxmcontroller.cpp src/cameraconfigdialog.cpp
+SOURCES += src/main.cpp src/mainwindow.cpp src/serialconfigdialog.cpp src/vxmcontroller.cpp src/cameraconfigdialog.cpp src/drawableviewfinder.cpp
 
-HEADERS += src/mainwindow.h src/serialconfigdialog.h src/vxmcontroller.h src/cameraconfigdialog.h
+HEADERS += src/mainwindow.h src/serialconfigdialog.h src/vxmcontroller.h src/cameraconfigdialog.h src/drawableviewfinder.h
 
 FORMS += src/mainwindow.ui src/serialconfigdialog.ui src/cameraconfigdialog.ui
 

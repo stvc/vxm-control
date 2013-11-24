@@ -29,9 +29,14 @@ MainWindow::MainWindow(QWidget *parent) :
     viewFinder = new QCameraViewfinder();
     camera->setViewfinder(viewFinder);
 
-    QVBoxLayout *layout = new QVBoxLayout();
-    layout->addWidget(viewFinder);
-    this->ui->displayFrame->setLayout(layout);
+    shapeDrawer = new DrawableViewfinder(viewFinder);
+    shapeDrawer->setGeometry(viewFinder->geometry());
+
+    QVBoxLayout *l = new QVBoxLayout();
+    l->addWidget(viewFinder);
+    ui->displayFrame->setLayout(l);
+
+
 
     shapeDrawn = false;
 
@@ -44,6 +49,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(controller, SIGNAL(serialBusy()), this, SLOT(controller_busy()));
 
     connect(camera, SIGNAL(error(QCamera::Error)), this, SLOT(camera_error(QCamera::Error)));
+
+    connect(shapeDrawer, SIGNAL(pointsChanged()), this, SLOT(updatePoints()));
 }
 
 MainWindow::~MainWindow()
@@ -130,6 +137,12 @@ void MainWindow::controller_busy() {
 
 void MainWindow::camera_error(QCamera::Error /* e */) {
     this->ui->statusbar->showMessage("camera error");
+}
+
+void MainWindow::updatePoints() {
+    shapeStart = shapeDrawer->getStartPoint();
+    shapeEnd = shapeDrawer->getEndPoint();
+    this->ui->statusbar->showMessage("signal emitted");
 }
 
 void MainWindow::toggleManualControls(bool b) {

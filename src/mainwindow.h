@@ -3,11 +3,15 @@
 
 #include "cameraconfigdialog.h"
 #include "serialconfigdialog.h"
+#include "drawableviewfinder.h"
 #include "vxmcontroller.h"
 #include <QMainWindow>
 #include <QLabel>
 #include <QCamera>
 #include <QCameraViewfinder>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsProxyWidget>
 
 namespace Ui {
     class MainWindow;
@@ -37,6 +41,8 @@ private slots:
 
     void camera_error(QCamera::Error);
 
+    void updatePoints();
+
 private:
     void toggleManualControls(bool);
     void refreshMoveBtnState();
@@ -47,6 +53,7 @@ private:
 
     QCamera *camera;
     QCameraViewfinder *viewFinder;
+    DrawableViewfinder *shapeDrawer;
 
     QLabel *labelConnectionStatus;
     VXMController *controller;
