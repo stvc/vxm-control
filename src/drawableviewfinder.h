@@ -11,7 +11,7 @@ class DrawableViewfinder : public QWidget
     Q_OBJECT
 
 public:
-    enum Shape { Line, Rectangle };
+    enum Shape { None, Point, Line, Rectangle };
 
     DrawableViewfinder(QWidget *parent = 0);
     ~DrawableViewfinder();
@@ -21,6 +21,7 @@ public:
     void mouseMoveEvent(QMouseEvent*);
 
     void setShape(Shape);
+    void resetPoints();
     QPoint getStartPoint();
     QPoint getEndPoint();
 
@@ -31,6 +32,7 @@ signals:
     void pointsChanged();
 
 private:
+    void updateEndPoint(QPoint end);
     Shape shape;
     QPoint startPoint;
     QPoint endPoint;

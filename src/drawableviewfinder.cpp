@@ -5,7 +5,7 @@ DrawableViewfinder::DrawableViewfinder(QWidget *parent) :
     startPoint(0,0),
     endPoint(0,0)
 {
-    shape = Line;
+    shape = None;
     setAutoFillBackground(false);
 }
 
@@ -14,7 +14,7 @@ DrawableViewfinder::~DrawableViewfinder() {
 
 void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
     QPainter painter(this);
-    painter.setPen(QPen(Qt::green, 5,
+    painter.setPen(QPen(Qt::green, 2,
                 Qt::PenStyle(Qt::SolidLine),
                 Qt::PenCapStyle(Qt::FlatCap),
                 Qt::PenJoinStyle(Qt::MiterJoin)));
@@ -26,36 +26,44 @@ void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
         case Rectangle:
             painter.drawRect(QRect(startPoint, endPoint));
             break;
+        case Point:
+            painter.drawPoint(endPoint);
+            break;
     }
     emit pointsChanged();
 }
 
 void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
+    if (shape == None) {
+        return;
+    }
     int x = event->x();
     int y = event->y();
 
-    startPoint.setX(x);
-    startPoint.setY(y);
-    endPoint.setX(x);
-    endPoint.setY(y);
+    startPoint = QPoint(x,y);
+    endPoint = QPoint(x,y);
     update();
 }
 
 void DrawableViewfinder::mouseReleaseEvent(QMouseEvent* event) {
+    if (shape == None) {
+        return;
+    }
     int x = event->x();
     int y = event->y();
 
-    endPoint.setX(x);
-    endPoint.setY(y);
+    updateEndPoint(QPoint(x,y));
     update();
 }
 
 void DrawableViewfinder::mouseMoveEvent(QMouseEvent* event) {
+    if (shape == None) {
+        return;
+    }
     int x = event->x();
     int y = event->y();
 
-    endPoint.setX(x);
-    endPoint.setY(y);
+    updateEndPoint(QPoint(x,y));
     update();
 }
 
@@ -71,3 +79,30 @@ QPoint DrawableViewfinder::getEndPoint() {
     return endPoint;
 }
 
+void DrawableViewfinder::resetPoints() {
+    startPoint = QPoint(0,0);
+    endPoint = QPoint(0,0);
+    update();
+}
+
+void DrawableViewfinder::updateEndPoint(QPoint end) {
+    if (shape == Point) {
+        endPoint = end;
+        startPoint = end;
+    }
+    else if (shape == Line) {
+        int xdiff = end.x() - startPoint.x();
+        int ydiff = end.y() - startPoint.y();
+        if (xdiff < 0) xdiff *= -1;
+        if (ydiff < 0) ydiff *= -1;
+        if (xdiff > ydiff) { // draw horizontal line
+            endPoint = QPoint(end.x(), startPoint.y());
+        }
+        else {
+            endPoint = QPoint(startPoint.x(), end.y());
+        }
+    }
+    else if (shape == Rectangle) {
+        endPoint = end;
+    }
+}

@@ -41,7 +41,10 @@ private slots:
 
     void camera_error(QCamera::Error);
 
-    void updatePoints();
+    void drawing_updated();
+
+protected:
+    void resizeEvent(QResizeEvent *);
 
 private:
     void toggleManualControls(bool);

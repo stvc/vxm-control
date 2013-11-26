@@ -50,7 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(camera, SIGNAL(error(QCamera::Error)), this, SLOT(camera_error(QCamera::Error)));
 
-    connect(shapeDrawer, SIGNAL(pointsChanged()), this, SLOT(updatePoints()));
+    connect(shapeDrawer, SIGNAL(pointsChanged()), this, SLOT(drawing_updated()));
 }
 
 MainWindow::~MainWindow()
@@ -91,12 +91,21 @@ void MainWindow::on_btnConnect_clicked() {
 }
 
 void MainWindow::on_btnGrpDrawType_buttonClicked(int id) {
+    shapeDrawer->resetPoints();
     switch (id) {
         case DRAW_MANUAL:
+            shapeDrawer->setShape(DrawableViewfinder::None);
             toggleManualControls(true);
             break;
-        default:
+        case DRAW_LINE:
+            shapeDrawer->setShape(DrawableViewfinder::Line);
             toggleManualControls(false);
+            break;
+        case DRAW_RECT:
+            shapeDrawer->setShape(DrawableViewfinder::Rectangle);
+            toggleManualControls(false);
+            break;
+        default:
             break;
     }
     refreshMoveBtnState();
@@ -139,10 +148,22 @@ void MainWindow::camera_error(QCamera::Error /* e */) {
     this->ui->statusbar->showMessage("camera error");
 }
 
-void MainWindow::updatePoints() {
+void MainWindow::drawing_updated() {
     shapeStart = shapeDrawer->getStartPoint();
     shapeEnd = shapeDrawer->getEndPoint();
     this->ui->statusbar->showMessage("signal emitted");
+}
+
+void MainWindow::resizeEvent(QResizeEvent* event) {
+    QMainWindow::resizeEvent(event);
+    QRect geo(0,0,0,0);
+    geo.setWidth(ui->displayFrame->width());
+    geo.setHeight(ui->displayFrame->height());
+    geo.setWidth(viewFinder->width());
+    geo.setHeight(viewFinder->height());
+    shapeDrawer->setGeometry(geo);
+
+
 }
 
 void MainWindow::toggleManualControls(bool b) {
