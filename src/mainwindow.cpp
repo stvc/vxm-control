@@ -36,8 +36,6 @@ MainWindow::MainWindow(QWidget *parent) :
     l->addWidget(viewFinder);
     ui->displayFrame->setLayout(l);
 
-
-
     shapeDrawn = false;
 
     camera->start();
@@ -53,8 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(shapeDrawer, SIGNAL(pointsChanged()), this, SLOT(drawing_updated()));
 }
 
-MainWindow::~MainWindow()
-{
+MainWindow::~MainWindow() {
     delete ui;
 }
 
@@ -142,10 +139,12 @@ void MainWindow::controller_disconnected() {
 
 void MainWindow::controller_ready() {
     refreshMoveBtnState();
+    ui->btnCalibrate->setEnabled(true);
 }
 
 void MainWindow::controller_busy() {
     this->ui->btnDoMove->setEnabled(false);
+    this->ui->btnCalibrate->setEnabled(false);
 }
 
 void MainWindow::camera_error(QCamera::Error /* e */) {
@@ -166,8 +165,6 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
     geo.setWidth(viewFinder->width());
     geo.setHeight(viewFinder->height());
     shapeDrawer->setGeometry(geo);
-
-
 }
 
 void MainWindow::toggleManualControls(bool b) {
