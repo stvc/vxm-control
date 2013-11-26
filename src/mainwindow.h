@@ -28,6 +28,7 @@ public:
     ~MainWindow();
 
 private slots:
+    void on_actionE_xit_triggered();
     void on_actionSerialConfig_triggered();
     void on_actionCameraConfig_triggered();
     void on_btnConnect_clicked();

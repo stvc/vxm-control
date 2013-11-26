@@ -58,6 +58,10 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+void MainWindow::on_actionE_xit_triggered() {
+    this->close();
+}
+
 void MainWindow::on_actionSerialConfig_triggered() {
     if (controller->isSerialOpen()) {
         controller->closeSerialConnection();
