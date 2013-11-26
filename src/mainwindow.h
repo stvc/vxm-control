@@ -32,7 +32,7 @@ private slots:
     void on_actionSerialConfig_triggered();
     void on_actionCameraConfig_triggered();
     void on_btnConnect_clicked();
-    void on_btnDoMove_clicked();
+    void on_btnMove_clicked();
     void on_btnGrpDrawType_buttonClicked(int);
 
     void controller_connected();

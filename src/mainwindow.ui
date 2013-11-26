@@ -31,7 +31,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="pushButton">
+       <widget class="QPushButton" name="btnCalibrate">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -174,7 +174,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QPushButton" name="btnDoMove">
+       <widget class="QPushButton" name="btnMove">
         <property name="enabled">
          <bool>false</bool>
         </property>
@@ -261,7 +261,7 @@
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGrpDirection"/>
   <buttongroup name="btnGrpDrawType"/>
+  <buttongroup name="btnGrpDirection"/>
  </buttongroups>
 </ui>

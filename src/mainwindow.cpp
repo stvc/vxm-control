@@ -112,7 +112,7 @@ void MainWindow::on_btnGrpDrawType_buttonClicked(int id) {
     refreshMoveBtnState();
 }
 
-void MainWindow::on_btnDoMove_clicked() {
+void MainWindow::on_btnMove_clicked() {
     VXMController::Direction d;
     if (ui->radioUp->isChecked())
         d = VXMController::MOVE_UP;
@@ -143,7 +143,7 @@ void MainWindow::controller_ready() {
 }
 
 void MainWindow::controller_busy() {
-    this->ui->btnDoMove->setEnabled(false);
+    this->ui->btnMove->setEnabled(false);
     this->ui->btnCalibrate->setEnabled(false);
 }
 
@@ -177,7 +177,7 @@ void MainWindow::toggleManualControls(bool b) {
 }
 
 void MainWindow::refreshMoveBtnState() {
-    this->ui->btnDoMove->setEnabled(false);
+    this->ui->btnMove->setEnabled(false);
 
     // do nothing if controller isn't connected
     if (!this->controller->isSerialOpen())
@@ -187,5 +187,5 @@ void MainWindow::refreshMoveBtnState() {
         return;
     // make sure that either user is moving manually, or user has drawn a shape
     if (shapeDrawn || this->ui->radioDrawManual->isChecked())
-        this->ui->btnDoMove->setEnabled(true);
+        this->ui->btnMove->setEnabled(true);
 }
