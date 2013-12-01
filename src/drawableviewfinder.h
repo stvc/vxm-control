@@ -11,7 +11,7 @@ class DrawableViewfinder : public QWidget
     Q_OBJECT
 
 public:
-    enum Shape { None, Point, Line, Rectangle };
+    enum Shape { None, SinglePoint, StartPoint, EndPoint, Line, Rectangle };
 
     DrawableViewfinder(QWidget *parent = 0);
     ~DrawableViewfinder();

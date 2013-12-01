@@ -32,6 +32,7 @@ private slots:
     void on_actionSerialConfig_triggered();
     void on_actionCameraConfig_triggered();
     void on_btnConnect_clicked();
+    void on_btnCalibrate_clicked();
     void on_btnMove_clicked();
     void on_btnGrpDrawType_buttonClicked(int);
 
@@ -43,6 +44,10 @@ private slots:
     void camera_error(QCamera::Error);
 
     void drawing_updated();
+    void calibration_step_updated();
+
+signals:
+    void calibrationStepChanged();
 
 protected:
     void resizeEvent(QResizeEvent *);
@@ -62,9 +67,15 @@ private:
     QLabel *labelConnectionStatus;
     VXMController *controller;
 
+    QPoint crossHairs;
+
     QPoint shapeStart;
     QPoint shapeEnd;
     bool shapeDrawn;
+
+    bool inCalibrationMode;
+    int calibrationStep;
+
 };
 
 #endif

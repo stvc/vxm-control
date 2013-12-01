@@ -26,7 +26,14 @@ void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
         case Rectangle:
             painter.drawRect(QRect(startPoint, endPoint));
             break;
-        case Point:
+        case SinglePoint:
+            painter.drawPoint(endPoint);
+            break;
+        case StartPoint:
+            painter.drawPoint(startPoint);
+            break;
+        case EndPoint:
+            painter.drawPoint(startPoint);
             painter.drawPoint(endPoint);
             break;
     }
@@ -86,9 +93,12 @@ void DrawableViewfinder::resetPoints() {
 }
 
 void DrawableViewfinder::updateEndPoint(QPoint end) {
-    if (shape == Point) {
+    if (shape == StartPoint || shape == SinglePoint) {
         endPoint = end;
         startPoint = end;
+    }
+    if (shape == EndPoint) {
+        endPoint = end;
     }
     else if (shape == Line) {
         int xdiff = end.x() - startPoint.x();

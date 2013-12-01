@@ -37,6 +37,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->displayFrame->setLayout(l);
 
     shapeDrawn = false;
+    inCalibrationMode = false;
+    calibrationStep = 0;
 
     camera->start();
 
@@ -49,6 +51,9 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(camera, SIGNAL(error(QCamera::Error)), this, SLOT(camera_error(QCamera::Error)));
 
     connect(shapeDrawer, SIGNAL(pointsChanged()), this, SLOT(drawing_updated()));
+
+    // temporary while I create the calibration routine
+    ui->btnCalibrate->setEnabled(true);
 }
 
 MainWindow::~MainWindow() {
@@ -88,6 +93,26 @@ void MainWindow::on_btnConnect_clicked() {
     }
     else {
         controller->openSerialConnection(serialDialog->getSerialSettings());
+    }
+}
+
+void MainWindow::on_btnCalibrate_clicked() {
+    if (ui->btnCalibrate->text() == "Cancel") {
+        ui->stackedWidget->setCurrentWidget(ui->pageMove);
+        ui->btnCalibrate->setText("Calibrate");
+        shapeDrawer->resetPoints();
+        inCalibrationMode = false;
+        calibrationStep = 0;
+        emit calibrationStepChanged();
+        ui->btnGrpDrawType->buttonClicked(ui->btnGrpDrawType->checkedId());
+    }
+    else {
+        ui->stackedWidget->setCurrentWidget(ui->pageCalibrate);
+        ui->btnCalibrate->setText("Cancel");
+        shapeDrawer->setShape(DrawableViewfinder::StartPoint);
+        inCalibrationMode = true;
+        calibrationStep = 0;
+        emit calibrationStepChanged();
     }
 }
 
@@ -154,7 +179,74 @@ void MainWindow::camera_error(QCamera::Error /* e */) {
 void MainWindow::drawing_updated() {
     shapeStart = shapeDrawer->getStartPoint();
     shapeEnd = shapeDrawer->getEndPoint();
-    this->ui->statusbar->showMessage("signal emitted");
+
+    // if in calibration mode, advance to the next step
+    if (inCalibrationMode) {
+        calibrationStep++;
+        emit calibrationStepChanged();
+    }
+}
+
+void MainWindow::calibration_step_updated() {
+    switch (calibrationStep) {
+        case 0:
+            // Instruction1: Set point
+            // disable all but the first step and set drawer's shape
+            ui->labelInstruction1->setEnabled(true);
+            ui->labelInstruction2->setEnabled(false);
+            ui->labelInstruction3->setEnabled(false);
+            ui->labelInstruction4->setEnabled(false);
+            ui->labelInstruction5->setEnabled(false);
+            ui->labelInstruction6->setEnabled(false);
+            ui->spinBoxCalXSteps->setEnabled(false);
+            ui->spinboxCalYSteps->setEnabled(false);
+            ui->btnCalMoveX->setEnabled(false);
+            ui->btnCalMoveY->setEnabled(false);
+            ui->btnCalSave->setEnabled(false);
+            shapeDrawer->setShape(DrawableViewfinder::StartPoint);
+            break;
+        case 1:
+            // Instruction2: Move in X direction
+            ui->labelInstruction1->setEnabled(false);
+            ui->labelInstruction2->setEnabled(true);
+            ui->btnCalMoveX->setEnabled(true);
+            ui->spinBoxCalXSteps->setEnabled(true);
+            break;
+        case 2:
+            // Instruction3: Mark new Point
+            ui->labelInstruction2->setEnabled(false);
+            ui->labelInstruction3->setEnabled(true);
+            shapeDrawer->setShape(DrawableViewfinder::EndPoint);
+            break;
+        case 3:
+            // Instruction4: Move in Y direction
+            ui->labelInstruction3->setEnabled(false);
+            ui->labelInstruction4->setEnabled(true);
+            shapeDrawer->resetPoints();
+            shapeDrawer->setShape(DrawableViewfinder::StartPoint);
+            break;
+        case 4:
+            // Instruction5: Mark new location
+            ui->labelInstruction4->setEnabled(false);
+            ui->labelInstruction5->setEnabled(true);
+            shapeDrawer->setShape(DrawableViewfinder::EndPoint);
+            break;
+        case 5:
+            // Instruction6: Mark crosshairs
+            ui->labelInstruction5->setEnabled(false);
+            ui->labelInstruction6->setEnabled(true);
+            shapeDrawer->resetPoints();
+            shapeDrawer->setShape(DrawableViewfinder::SinglePoint);
+            break;
+        case 6:
+            // save calibration
+            ui->labelInstruction6->setEnabled(false);
+            ui->btnCalSave->setEnabled(true);
+            break;
+        default:
+            calibrationStep = 0;
+            emit calibrationStepChanged();
+    }
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
