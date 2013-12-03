@@ -179,16 +179,15 @@ void MainWindow::on_btnMove_clicked() {
 }
 
 void MainWindow::on_btnCalMoveX_clicked() {
-    calibrationStep++;
+    ui->btnCalMoveX->setEnabled(false);
+    ui->spinBoxCalXSteps->setEnabled(false);
     controller->move(VXMController::MOVE_RIGHT, ui->spinBoxCalXSteps->value());
-    emit calibrationStepChanged();
-
 }
 
 void MainWindow::on_btnCalMoveY_clicked() {
-    calibrationStep++;
+    ui->btnCalMoveY->setEnabled(false);
+    ui->spinBoxCalYSteps->setEnabled(false);
     controller->move(VXMController::MOVE_DOWN, ui->spinBoxCalYSteps->value());
-    emit calibrationStepChanged();
 }
 
 void MainWindow::on_btnCalSave_clicked() {
@@ -212,8 +211,14 @@ void MainWindow::controller_disconnected() {
 }
 
 void MainWindow::controller_ready() {
-    refreshMoveBtnState();
-    ui->btnCalibrate->setEnabled(true);
+    if (inCalibrationMode) {
+        calibrationStep++;
+        emit calibrationStepChanged();
+    }
+    else {
+        refreshMoveBtnState();
+        ui->btnCalibrate->setEnabled(true);
+    }
 }
 
 void MainWindow::controller_busy() {
