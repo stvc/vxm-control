@@ -22,8 +22,10 @@ public:
 
     void setShape(Shape);
     void resetPoints();
+    void freezePoints(bool);
     QPoint getStartPoint();
     QPoint getEndPoint();
+    void setStartPoint(QPoint);
 
 protected:
     void paintEvent(QPaintEvent*);
@@ -34,6 +36,7 @@ signals:
 private:
     void updateEndPoint(QPoint end);
     Shape shape;
+    bool pointsFrozen;
     QPoint startPoint;
     QPoint endPoint;
 

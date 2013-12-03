@@ -315,7 +315,7 @@ direction</string>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_3">
             <item>
-             <widget class="QSpinBox" name="spinboxCalYSteps">
+             <widget class="QSpinBox" name="spinBoxCalYSteps">
               <property name="enabled">
                <bool>false</bool>
               </property>
@@ -452,7 +452,7 @@ location</string>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGrpDirection"/>
   <buttongroup name="btnGrpDrawType"/>
+  <buttongroup name="btnGrpDirection"/>
  </buttongroups>
 </ui>

@@ -51,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(camera, SIGNAL(error(QCamera::Error)), this, SLOT(camera_error(QCamera::Error)));
 
     connect(shapeDrawer, SIGNAL(pointsChanged()), this, SLOT(drawing_updated()));
+    connect(this, SIGNAL(calibrationStepChanged()), this, SLOT(calibration_step_updated()));
 
     // temporary while I create the calibration routine
     ui->btnCalibrate->setEnabled(true);
@@ -151,6 +152,25 @@ void MainWindow::on_btnMove_clicked() {
     controller->move(d,s);
 }
 
+void MainWindow::on_btnCalMoveX_clicked() {
+    calibrationStep++;
+    emit calibrationStepChanged();
+}
+
+void MainWindow::on_btnCalMoveY_clicked() {
+    calibrationStep++;
+    emit calibrationStepChanged();
+}
+
+void MainWindow::on_btnCalSave_clicked() {
+    // save calibration
+    controller->setXStepsPerUnit(tmpXStepsPerPixel);
+    controller->setYStepsPerUnit(tmpYStepsPerPixel);
+    crossHairs = shapeDrawer->getEndPoint();
+    // reset ui
+    ui->btnCalibrate->click();
+}
+
 void MainWindow::controller_connected() {
     this->ui->btnConnect->setText("Disconnect");
     this->labelConnectionStatus->setText("Status: Connected");
@@ -188,6 +208,7 @@ void MainWindow::drawing_updated() {
 }
 
 void MainWindow::calibration_step_updated() {
+    double pixels = 0;
     switch (calibrationStep) {
         case 0:
             // Instruction1: Set point
@@ -199,7 +220,7 @@ void MainWindow::calibration_step_updated() {
             ui->labelInstruction5->setEnabled(false);
             ui->labelInstruction6->setEnabled(false);
             ui->spinBoxCalXSteps->setEnabled(false);
-            ui->spinboxCalYSteps->setEnabled(false);
+            ui->spinBoxCalYSteps->setEnabled(false);
             ui->btnCalMoveX->setEnabled(false);
             ui->btnCalMoveY->setEnabled(false);
             ui->btnCalSave->setEnabled(false);
@@ -211,27 +232,41 @@ void MainWindow::calibration_step_updated() {
             ui->labelInstruction2->setEnabled(true);
             ui->btnCalMoveX->setEnabled(true);
             ui->spinBoxCalXSteps->setEnabled(true);
+            shapeDrawer->freezePoints(true);
             break;
         case 2:
             // Instruction3: Mark new Point
             ui->labelInstruction2->setEnabled(false);
+            ui->btnCalMoveX->setEnabled(false);
+            ui->spinBoxCalXSteps->setEnabled(false);
             ui->labelInstruction3->setEnabled(true);
             shapeDrawer->setShape(DrawableViewfinder::EndPoint);
+            shapeDrawer->freezePoints(false);
             break;
         case 3:
+            pixels = shapeDrawer->getEndPoint().x() - shapeDrawer->getStartPoint().x();
+            tmpXStepsPerPixel = ui->spinBoxCalXSteps->value() / pixels;
             // Instruction4: Move in Y direction
             ui->labelInstruction3->setEnabled(false);
             ui->labelInstruction4->setEnabled(true);
-            shapeDrawer->resetPoints();
-            shapeDrawer->setShape(DrawableViewfinder::StartPoint);
+            ui->btnCalMoveY->setEnabled(true);
+            ui->spinBoxCalYSteps->setEnabled(true);
+            shapeDrawer->setShape(DrawableViewfinder::EndPoint);
+            shapeDrawer->setStartPoint(shapeDrawer->getEndPoint());
+            shapeDrawer->freezePoints(true);
             break;
         case 4:
             // Instruction5: Mark new location
             ui->labelInstruction4->setEnabled(false);
+            ui->btnCalMoveY->setEnabled(false);
+            ui->spinBoxCalYSteps->setEnabled(false);
             ui->labelInstruction5->setEnabled(true);
             shapeDrawer->setShape(DrawableViewfinder::EndPoint);
+            shapeDrawer->freezePoints(false);
             break;
         case 5:
+            pixels = shapeDrawer->getEndPoint().y() - shapeDrawer->getStartPoint().y();
+            tmpYStepsPerPixel = ui->spinBoxCalYSteps->value() / pixels;
             // Instruction6: Mark crosshairs
             ui->labelInstruction5->setEnabled(false);
             ui->labelInstruction6->setEnabled(true);
@@ -257,6 +292,10 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
     geo.setWidth(viewFinder->width());
     geo.setHeight(viewFinder->height());
     shapeDrawer->setGeometry(geo);
+
+    if (inCalibrationMode) {
+        ui->btnCalibrate->click();
+    }
 }
 
 void MainWindow::toggleManualControls(bool b) {

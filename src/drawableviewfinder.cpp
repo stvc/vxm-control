@@ -6,6 +6,7 @@ DrawableViewfinder::DrawableViewfinder(QWidget *parent) :
     endPoint(0,0)
 {
     shape = None;
+    pointsFrozen = false;
     setAutoFillBackground(false);
 }
 
@@ -36,12 +37,13 @@ void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
             painter.drawPoint(startPoint);
             painter.drawPoint(endPoint);
             break;
+        default:
+            break;
     }
-    emit pointsChanged();
 }
 
 void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
-    if (shape == None) {
+    if (shape == None || pointsFrozen) {
         return;
     }
     int x = event->x();
@@ -53,7 +55,7 @@ void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
 }
 
 void DrawableViewfinder::mouseReleaseEvent(QMouseEvent* event) {
-    if (shape == None) {
+    if (shape == None || pointsFrozen) {
         return;
     }
     int x = event->x();
@@ -64,7 +66,7 @@ void DrawableViewfinder::mouseReleaseEvent(QMouseEvent* event) {
 }
 
 void DrawableViewfinder::mouseMoveEvent(QMouseEvent* event) {
-    if (shape == None) {
+    if (shape == None || pointsFrozen) {
         return;
     }
     int x = event->x();
@@ -76,6 +78,7 @@ void DrawableViewfinder::mouseMoveEvent(QMouseEvent* event) {
 
 void DrawableViewfinder::setShape(Shape s) {
     shape = s;
+    update();
 }
 
 QPoint DrawableViewfinder::getStartPoint() {
@@ -86,10 +89,18 @@ QPoint DrawableViewfinder::getEndPoint() {
     return endPoint;
 }
 
+void DrawableViewfinder::setStartPoint(QPoint p) {
+    startPoint = p;
+}
+
 void DrawableViewfinder::resetPoints() {
     startPoint = QPoint(0,0);
     endPoint = QPoint(0,0);
     update();
+}
+
+void DrawableViewfinder::freezePoints(bool f) {
+    pointsFrozen = f;
 }
 
 void DrawableViewfinder::updateEndPoint(QPoint end) {
@@ -115,4 +126,5 @@ void DrawableViewfinder::updateEndPoint(QPoint end) {
     else if (shape == Rectangle) {
         endPoint = end;
     }
+    emit pointsChanged();
 }

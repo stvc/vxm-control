@@ -35,6 +35,9 @@ private slots:
     void on_btnCalibrate_clicked();
     void on_btnMove_clicked();
     void on_btnGrpDrawType_buttonClicked(int);
+    void on_btnCalMoveX_clicked();
+    void on_btnCalMoveY_clicked();
+    void on_btnCalSave_clicked();
 
     void controller_connected();
     void controller_disconnected();
@@ -75,7 +78,8 @@ private:
 
     bool inCalibrationMode;
     int calibrationStep;
-
+    double tmpXStepsPerPixel;
+    double tmpYStepsPerPixel;
 };
 
 #endif
