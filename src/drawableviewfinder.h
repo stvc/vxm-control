@@ -21,6 +21,7 @@ public:
     void mouseMoveEvent(QMouseEvent*);
 
     void setShape(Shape);
+    Shape getShape();
     void resetPoints();
     void freezePoints(bool);
     QPoint getStartPoint();

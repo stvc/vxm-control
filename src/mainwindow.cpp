@@ -139,26 +139,55 @@ void MainWindow::on_btnGrpDrawType_buttonClicked(int id) {
 }
 
 void MainWindow::on_btnMove_clicked() {
-    VXMController::Direction d;
-    if (ui->radioUp->isChecked())
-        d = VXMController::MOVE_UP;
-    else if (ui->radioDown->isChecked())
-        d = VXMController::MOVE_DOWN;
-    else if (ui->radioRight->isChecked())
-        d = VXMController::MOVE_RIGHT;
-    else
-        d = VXMController::MOVE_LEFT;
-    int s = ui->spinBoxSteps->value();
-    controller->move(d,s);
+    DrawableViewfinder::Shape shape = shapeDrawer->getShape();
+    if (shape == DrawableViewfinder::None) {
+        VXMController::Direction d;
+        if (ui->radioUp->isChecked())
+            d = VXMController::MOVE_UP;
+        else if (ui->radioDown->isChecked())
+            d = VXMController::MOVE_DOWN;
+        else if (ui->radioRight->isChecked())
+            d = VXMController::MOVE_RIGHT;
+        else
+            d = VXMController::MOVE_LEFT;
+        int s = ui->spinBoxSteps->value();
+        controller->move(d,s);
+    }
+    else if (shape == DrawableViewfinder::Line) {
+        // points should be up to date from drawing_updated() slot
+        int x = crossHairs.x() - shapeStart.x();
+        int y = crossHairs.y() - shapeStart.y();
+        controller->move(VXMController::MOVE_RIGHT, x);
+        controller->move(VXMController::MOVE_DOWN, y);
+        x = shapeEnd.x() - shapeStart.x();
+        y = shapeEnd.y() - shapeStart.y();
+        controller->move(VXMController::MOVE_RIGHT, x);
+        controller->move(VXMController::MOVE_DOWN, y);
+    }
+    else if (shape == DrawableViewfinder::Rectangle) {
+        int x = crossHairs.x() - shapeStart.x();
+        int y = crossHairs.y() - shapeStart.y();
+        controller->move(VXMController::MOVE_RIGHT, x);
+        controller->move(VXMController::MOVE_DOWN, y);
+        int width = shapeEnd.x() - shapeStart.x();
+        int height = shapeEnd.y() - shapeStart.y();
+        controller->move(VXMController::MOVE_RIGHT, width);
+        controller->move(VXMController::MOVE_DOWN, height);
+        controller->move(VXMController::MOVE_LEFT, width);
+        controller->move(VXMController::MOVE_UP, height);
+    }
 }
 
 void MainWindow::on_btnCalMoveX_clicked() {
     calibrationStep++;
+    controller->move(VXMController::MOVE_RIGHT, ui->spinBoxCalXSteps->value());
     emit calibrationStepChanged();
+
 }
 
 void MainWindow::on_btnCalMoveY_clicked() {
     calibrationStep++;
+    controller->move(VXMController::MOVE_DOWN, ui->spinBoxCalYSteps->value());
     emit calibrationStepChanged();
 }
 

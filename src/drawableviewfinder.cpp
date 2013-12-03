@@ -81,6 +81,10 @@ void DrawableViewfinder::setShape(Shape s) {
     update();
 }
 
+DrawableViewfinder::Shape DrawableViewfinder::getShape() {
+    return shape;
+}
+
 QPoint DrawableViewfinder::getStartPoint() {
     return startPoint;
 }
