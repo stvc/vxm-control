@@ -239,6 +239,9 @@ void MainWindow::drawing_updated() {
         calibrationStep++;
         emit calibrationStepChanged();
     }
+    else if (ui->btnGrpDrawType->checkedId() != DRAW_MANUAL) {
+        shapeDrawn = true;
+    }
 }
 
 void MainWindow::calibration_step_updated() {
