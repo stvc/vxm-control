@@ -157,24 +157,28 @@ void MainWindow::on_btnMove_clicked() {
         // points should be up to date from drawing_updated() slot
         int x = crossHairs.x() - shapeStart.x();
         int y = crossHairs.y() - shapeStart.y();
-        controller->move(VXMController::MOVE_RIGHT, x);
-        controller->move(VXMController::MOVE_DOWN, y);
+        controller->batchMoveNew();
+        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, x);
+        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, y);
         x = shapeEnd.x() - shapeStart.x();
         y = shapeEnd.y() - shapeStart.y();
-        controller->move(VXMController::MOVE_RIGHT, x);
-        controller->move(VXMController::MOVE_DOWN, y);
+        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, x);
+        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, y);
+        controller->batchMoveExec();
     }
     else if (shape == DrawableViewfinder::Rectangle) {
         int x = crossHairs.x() - shapeStart.x();
         int y = crossHairs.y() - shapeStart.y();
-        controller->move(VXMController::MOVE_RIGHT, x);
-        controller->move(VXMController::MOVE_DOWN, y);
+        controller->batchMoveNew();
+        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, x);
+        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, y);
         int width = shapeEnd.x() - shapeStart.x();
         int height = shapeEnd.y() - shapeStart.y();
-        controller->move(VXMController::MOVE_RIGHT, width);
-        controller->move(VXMController::MOVE_DOWN, height);
-        controller->move(VXMController::MOVE_LEFT, width);
-        controller->move(VXMController::MOVE_UP, height);
+        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, width);
+        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, height);
+        controller->batchMoveAddMovement(VXMController::MOVE_LEFT, width);
+        controller->batchMoveAddMovement(VXMController::MOVE_UP, height);
+        controller->batchMoveExec();
     }
 }
 
