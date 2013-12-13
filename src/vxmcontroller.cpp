@@ -9,6 +9,8 @@ VXMController::VXMController(QObject *parent) :
    yStepsPerUnit = 1;
    isConnected = false;
 
+   batchMovement = QByteArray();
+
    connect(serialConnection, SIGNAL(readyRead()), this, SLOT(serialReadyReadSlot()));
 }
 
@@ -75,6 +77,45 @@ void VXMController::move(Direction d, int units) {
     data.append(",R\n");
     if (serialConnection->write(data) == -1) {
         QMessageBox::critical(0, "Error", "Could not write to serial port");
+    }
+}
+
+void VXMController::batchMoveNew() {
+    batchMovement = QByteArray("F I");
+}
+
+void VXMController::batchMoveAddMovement(Direction d, int units) {
+    QByteArray steps;
+    switch (d) {
+        case MOVE_UP:
+            batchMovement.append("1M-");
+            steps = QByteArray::number((int) (units * yStepsPerUnit));
+            break;
+        case MOVE_DOWN:
+            batchMovement.append("1M");
+            steps = QByteArray::number((int) (units * yStepsPerUnit));
+            break;
+        case MOVE_LEFT:
+            batchMovement.append("2M-");
+            steps = QByteArray::number((int) (units * xStepsPerUnit));
+            break;
+        case MOVE_RIGHT:
+            batchMovement.append("2M");
+            steps = QByteArray::number((int) (units * xStepsPerUnit));
+            break;
+    }
+
+    while (steps.length() < 3) {
+        steps.prepend('0');
+    }
+    batchMovement.append(steps);
+    batchMovement.append(",");
+}
+
+void VXMController::batchMoveExec() {
+    batchMovement.append("R");
+    if (serialConnection->write(batchMovement) == -1) {
+        QMessageBox::critical(0,"Error", "Could not write to serial port");
     }
 }
 

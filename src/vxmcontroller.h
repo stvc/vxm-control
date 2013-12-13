@@ -24,6 +24,11 @@ public:
     void openSerialConnection(SerialSettings settings);
     void closeSerialConnection();
     void move(Direction, int);
+
+    void batchMoveNew();
+    void batchMoveAddMovement(Direction, int);
+    void batchMoveExec();
+
     void setXStepsPerUnit(double);
     void setYStepsPerUnit(double);
     bool isSerialOpen();
@@ -44,6 +49,8 @@ private:
     double yStepsPerUnit;
     bool isConnected;
     bool hasBeenCalibrated;
+
+    QByteArray batchMovement;
 };
 
 #endif
