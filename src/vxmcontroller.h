@@ -44,6 +44,8 @@ private slots:
     void serialReadyReadSlot();
 
 private:
+    int loggedWrite(QByteArray);
+
     QSerialPort *serialConnection;
     double xStepsPerUnit;
     double yStepsPerUnit;

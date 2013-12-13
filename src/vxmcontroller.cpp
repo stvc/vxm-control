@@ -1,5 +1,7 @@
 #include "vxmcontroller.h"
 #include <QMessageBox>
+#include <QFile>
+#include <QTextStream>
 
 VXMController::VXMController(QObject *parent) :
     QObject(parent)
@@ -81,26 +83,26 @@ void VXMController::move(Direction d, int units) {
 }
 
 void VXMController::batchMoveNew() {
-    batchMovement = QByteArray("F I");
+    batchMovement = QByteArray("F ");
 }
 
 void VXMController::batchMoveAddMovement(Direction d, int units) {
     QByteArray steps;
     switch (d) {
         case MOVE_UP:
-            batchMovement.append("1M-");
+            batchMovement.append("I1M-");
             steps = QByteArray::number((int) (units * yStepsPerUnit));
             break;
         case MOVE_DOWN:
-            batchMovement.append("1M");
+            batchMovement.append("I1M");
             steps = QByteArray::number((int) (units * yStepsPerUnit));
             break;
         case MOVE_LEFT:
-            batchMovement.append("2M-");
+            batchMovement.append("I2M-");
             steps = QByteArray::number((int) (units * xStepsPerUnit));
             break;
         case MOVE_RIGHT:
-            batchMovement.append("2M");
+            batchMovement.append("I2M");
             steps = QByteArray::number((int) (units * xStepsPerUnit));
             break;
     }
@@ -135,7 +137,26 @@ void VXMController::serialReadyReadSlot() {
     while (!serialConnection->atEnd()) {
         data.append(serialConnection->read(20));
     }
+    // log read data
+    QFile logFile("serialLog.txt");
+    if (logFile.open(QFile::WriteOnly | QFile::Append)) {
+        QTextStream log(&logFile);
+        log << " IN: " << data << endl;
+        logFile.close();
+    }
     if (data == "^" || data == "R") {
         emit serialReady();
     }
+}
+
+int VXMController::loggedWrite(QByteArray data) {
+    // write data to log file
+    QFile logFile("serialLog.txt");
+    if (logFile.open(QFile::WriteOnly | QFile::Append)) {
+        QTextStream log(&logFile);
+        log << "OUT: " << data << endl;
+        logFile.close();
+    }
+    // write data to serial port
+    return serialConnection->write(data);
 }
