@@ -114,6 +114,7 @@ void VXMController::batchMoveAddMovement(Direction d, int units) {
 
 void VXMController::batchMoveExec() {
     batchMovement.append("R");
+    emit serialBusy();
     if (serialConnection->write(batchMovement) == -1) {
         QMessageBox::critical(0,"Error", "Could not write to serial port");
     }
