@@ -54,6 +54,16 @@ bool VXMController::hasControllerBeenCalibrated() {
 void VXMController::move(Direction d, int units) {
     emit serialBusy();
     enteredProgram = true;
+
+    // switch direction if asked to move a negative number of units
+    if (units < 0) {
+        units *= -1;
+        if (d == MOVE_UP) d = MOVE_DOWN;
+        if (d == MOVE_DOWN) d = MOVE_UP;
+        if (d == MOVE_RIGHT) d = MOVE_LEFT;
+        if (d == MOVE_LEFT) d = MOVE_RIGHT;
+    }
+
     QByteArray data("F I");
     QByteArray steps;
     switch (d) {
@@ -90,6 +100,15 @@ void VXMController::batchMoveNew() {
 }
 
 void VXMController::batchMoveAddMovement(Direction d, int units) {
+    // switch direction if asked to move a negative number of units
+    if (units < 0) {
+        units *= -1;
+        if (d == MOVE_UP) d = MOVE_DOWN;
+        if (d == MOVE_DOWN) d = MOVE_UP;
+        if (d == MOVE_RIGHT) d = MOVE_LEFT;
+        if (d == MOVE_LEFT) d = MOVE_RIGHT;
+    }
+
     QByteArray steps;
     switch (d) {
         case MOVE_UP:
