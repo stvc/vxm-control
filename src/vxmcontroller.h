@@ -51,6 +51,7 @@ private:
     double yStepsPerUnit;
     bool isConnected;
     bool hasBeenCalibrated;
+    bool enteredProgram;
 
     QByteArray batchMovement;
 };

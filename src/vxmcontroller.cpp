@@ -10,6 +10,8 @@ VXMController::VXMController(QObject *parent) :
    xStepsPerUnit = 1;
    yStepsPerUnit = 1;
    isConnected = false;
+   hasBeenCalibrated = false;
+   enteredProgram = false;
 
    batchMovement = QByteArray();
 
@@ -51,6 +53,7 @@ bool VXMController::hasControllerBeenCalibrated() {
 
 void VXMController::move(Direction d, int units) {
     emit serialBusy();
+    enteredProgram = true;
     QByteArray data("F I");
     QByteArray steps;
     switch (d) {
@@ -117,6 +120,7 @@ void VXMController::batchMoveAddMovement(Direction d, int units) {
 void VXMController::batchMoveExec() {
     batchMovement.append("R");
     emit serialBusy();
+    enteredProgram = true;
     if (serialConnection->write(batchMovement) == -1) {
         QMessageBox::critical(0,"Error", "Could not write to serial port");
     }
@@ -145,7 +149,12 @@ void VXMController::serialReadyReadSlot() {
         logFile.close();
     }
     if (data == "^" || data == "R") {
-        emit serialReady();
+        if (enteredProgram) {
+            enteredProgram = false;
+            loggedWrite("C\n");
+        }
+        else
+            emit serialReady();
     }
 }
 
