@@ -54,7 +54,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(calibrationStepChanged()), this, SLOT(calibration_step_updated()));
 
     // temporary while I create the calibration routine
-    ui->btnCalibrate->setEnabled(true);
+//    ui->btnCalibrate->setEnabled(true);
 }
 
 MainWindow::~MainWindow() {
@@ -223,6 +223,7 @@ void MainWindow::controller_ready() {
         refreshMoveBtnState();
         ui->btnCalibrate->setEnabled(true);
     }
+    this->ui->btnCalibrate->setEnabled(true);
 }
 
 void MainWindow::controller_busy() {
