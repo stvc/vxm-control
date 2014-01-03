@@ -29,7 +29,7 @@ void VXMController::openSerialConnection(SerialSettings s) {
 
             isConnected = true;
             emit serialConnected();
-            if (serialConnection->write("F V\n") == -1)
+            if (loggedWrite("F V\n") == -1)
                 QMessageBox::critical(0, "Error", "Could not write to serial port");
         }
     }
@@ -58,10 +58,10 @@ void VXMController::move(Direction d, int units) {
     // switch direction if asked to move a negative number of units
     if (units < 0) {
         units *= -1;
-        if (d == MOVE_UP) d = MOVE_DOWN;
-        if (d == MOVE_DOWN) d = MOVE_UP;
+        if (d == MOVE_UP)    d = MOVE_DOWN;
+        if (d == MOVE_DOWN)  d = MOVE_UP;
         if (d == MOVE_RIGHT) d = MOVE_LEFT;
-        if (d == MOVE_LEFT) d = MOVE_RIGHT;
+        if (d == MOVE_LEFT)  d = MOVE_RIGHT;
     }
 
     QByteArray data("F I");
@@ -103,10 +103,10 @@ void VXMController::batchMoveAddMovement(Direction d, int units) {
     // switch direction if asked to move a negative number of units
     if (units < 0) {
         units *= -1;
-        if (d == MOVE_UP) d = MOVE_DOWN;
-        if (d == MOVE_DOWN) d = MOVE_UP;
+        if (d == MOVE_UP)    d = MOVE_DOWN;
+        if (d == MOVE_DOWN)  d = MOVE_UP;
         if (d == MOVE_RIGHT) d = MOVE_LEFT;
-        if (d == MOVE_LEFT) d = MOVE_RIGHT;
+        if (d == MOVE_LEFT)  d = MOVE_RIGHT;
     }
 
     QByteArray steps;
@@ -167,7 +167,11 @@ void VXMController::serialReadyReadSlot() {
         log << " IN: " << data << endl;
         logFile.close();
     }
-    if (data == "^" || data == "R") {
+
+    if (data == "R")
+        emit serialReady();
+
+    if (data == "^") {
         if (enteredProgram) {
             enteredProgram = false;
             loggedWrite("C\n");
