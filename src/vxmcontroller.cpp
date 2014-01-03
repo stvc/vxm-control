@@ -90,7 +90,7 @@ void VXMController::move(Direction d, int units) {
     }
     data.append(steps);
     data.append(",R\n");
-    if (serialConnection->write(data) == -1) {
+    if (loggedWrite(data) == -1) {
         QMessageBox::critical(0, "Error", "Could not write to serial port");
     }
 }
@@ -140,7 +140,7 @@ void VXMController::batchMoveExec() {
     batchMovement.append("R");
     emit serialBusy();
     enteredProgram = true;
-    if (serialConnection->write(batchMovement) == -1) {
+    if (loggedWrite(batchMovement) == -1) {
         QMessageBox::critical(0,"Error", "Could not write to serial port");
     }
 }
