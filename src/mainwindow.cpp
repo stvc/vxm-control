@@ -79,8 +79,8 @@ void MainWindow::on_actionCameraConfig_triggered() {
         if (cameraDialog->getDevice().length() > 0) {
             camera = new QCamera(cameraDialog->getDevice());
             camera->setViewfinder(viewFinder);
-            camera->start();
         }
+        camera->start();
     }
 }
 

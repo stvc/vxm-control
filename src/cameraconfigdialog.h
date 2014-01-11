@@ -18,6 +18,7 @@ public:
     int exec();
 
     QByteArray getDevice();
+    bool getMirror();
 
 private slots:
     void on_buttonBox_accepted();
@@ -25,6 +26,7 @@ private slots:
 private:
     Ui::CameraConfigDialog *ui;
     QByteArray device;
+    bool mirror;
 };
 
 #endif // CAMERACONFIGDIALOG_H

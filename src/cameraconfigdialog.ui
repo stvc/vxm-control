@@ -26,17 +26,10 @@
      <item row="0" column="1">
       <widget class="QComboBox" name="cbCameraDevices"/>
      </item>
-     <item row="1" column="0">
-      <widget class="QCheckBox" name="checkFlipX">
-       <property name="text">
-        <string>Flip X</string>
-       </property>
-      </widget>
-     </item>
      <item row="1" column="1">
-      <widget class="QCheckBox" name="checkFlipY">
+      <widget class="QCheckBox" name="checkMirror">
        <property name="text">
-        <string>Flip Y</string>
+        <string>Mirror</string>
        </property>
       </widget>
      </item>
