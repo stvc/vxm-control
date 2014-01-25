@@ -26,14 +26,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QList<QByteArray> cameraDevices = QCamera::availableDevices();
     camera = new QCamera(cameraDevices.first());
-    viewFinder = new QCameraViewfinder();
-    camera->setViewfinder(viewFinder);
-
-    shapeDrawer = new DrawableViewfinder(viewFinder);
-    shapeDrawer->setGeometry(viewFinder->geometry());
+    shapeDrawer = new DrawableViewfinder();
+    videoSurface = new CustomVideoSurface(shapeDrawer, this);
+    camera->setViewfinder(videoSurface);
 
     QVBoxLayout *l = new QVBoxLayout();
-    l->addWidget(viewFinder);
+    l->addWidget(shapeDrawer);
     ui->displayFrame->setLayout(l);
 
     shapeDrawn = false;
@@ -77,10 +75,12 @@ void MainWindow::on_actionCameraConfig_triggered() {
     if (cameraDialog->exec()) {
         camera->stop();
         if (cameraDialog->getDevice().length() > 0) {
+            delete camera;
             camera = new QCamera(cameraDialog->getDevice());
-            camera->setViewfinder(viewFinder);
+            camera->setViewfinder(videoSurface);
         }
         camera->start();
+        videoSurface->mirror(cameraDialog->getMirror());
     }
 }
 
@@ -331,8 +331,6 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
     QRect geo(0,0,0,0);
     geo.setWidth(ui->displayFrame->width());
     geo.setHeight(ui->displayFrame->height());
-    geo.setWidth(viewFinder->width());
-    geo.setHeight(viewFinder->height());
     shapeDrawer->setGeometry(geo);
 
     if (inCalibrationMode) {

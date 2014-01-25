@@ -27,6 +27,7 @@ public:
     QPoint getStartPoint();
     QPoint getEndPoint();
     void setStartPoint(QPoint);
+    void setImage(QImage);
 
 protected:
     void paintEvent(QPaintEvent*);
@@ -40,6 +41,7 @@ private:
     bool pointsFrozen;
     QPoint startPoint;
     QPoint endPoint;
+    QImage* frame;
 
 };
 

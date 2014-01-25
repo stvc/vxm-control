@@ -8,6 +8,8 @@ DrawableViewfinder::DrawableViewfinder(QWidget *parent) :
     shape = None;
     pointsFrozen = false;
     setAutoFillBackground(false);
+
+    frame = new QImage(QSize(0,0), QImage::Format_ARGB32_Premultiplied);
 }
 
 DrawableViewfinder::~DrawableViewfinder() {
@@ -15,6 +17,7 @@ DrawableViewfinder::~DrawableViewfinder() {
 
 void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
     QPainter painter(this);
+    painter.drawImage(QPoint(0,0), *frame);
     painter.setPen(QPen(Qt::green, 2,
                 Qt::PenStyle(Qt::SolidLine),
                 Qt::PenCapStyle(Qt::FlatCap),
@@ -95,6 +98,12 @@ QPoint DrawableViewfinder::getEndPoint() {
 
 void DrawableViewfinder::setStartPoint(QPoint p) {
     startPoint = p;
+}
+
+void DrawableViewfinder::setImage(QImage img) {
+    delete this->frame;
+    this->frame = new QImage(img);
+    this->update();
 }
 
 void DrawableViewfinder::resetPoints() {

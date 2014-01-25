@@ -3,6 +3,7 @@
 
 #include "cameraconfigdialog.h"
 #include "serialconfigdialog.h"
+#include "customvideosurface.h"
 #include "drawableviewfinder.h"
 #include "vxmcontroller.h"
 #include <QMainWindow>
@@ -64,7 +65,7 @@ private:
     CameraConfigDialog *cameraDialog;
 
     QCamera *camera;
-    QCameraViewfinder *viewFinder;
+    CustomVideoSurface *videoSurface;
     DrawableViewfinder *shapeDrawer;
 
     QLabel *labelConnectionStatus;
