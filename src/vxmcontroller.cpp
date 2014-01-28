@@ -7,10 +7,7 @@ VXMController::VXMController(QObject *parent) :
     QObject(parent)
 {
    serialConnection = new QSerialPort();
-   xStepsPerUnit = 1;
-   yStepsPerUnit = 1;
    isConnected = false;
-   hasBeenCalibrated = false;
    enteredProgram = false;
 
    batchMovement = QByteArray();
@@ -47,10 +44,6 @@ bool VXMController::isSerialOpen() {
     return isConnected;
 }
 
-bool VXMController::hasControllerBeenCalibrated() {
-    return hasBeenCalibrated;
-}
-
 void VXMController::move(Direction d, int units) {
     emit serialBusy();
     enteredProgram = true;
@@ -69,19 +62,19 @@ void VXMController::move(Direction d, int units) {
     switch (d) {
         case MOVE_UP:
             data.append("1M-");
-            steps = QByteArray::number((int) (units * yStepsPerUnit));
+            steps = QByteArray::number(units);
             break;
         case MOVE_DOWN:
             data.append("1M");
-            steps = QByteArray::number((int) (units * yStepsPerUnit));
+            steps = QByteArray::number(units);
             break;
         case MOVE_LEFT:
             data.append("2M-");
-            steps = QByteArray::number((int) (units * xStepsPerUnit));
+            steps = QByteArray::number(units);
             break;
         case MOVE_RIGHT:
             data.append("2M");
-            steps = QByteArray::number((int) (units * xStepsPerUnit));
+            steps = QByteArray::number(units);
             break;
     }
 
@@ -113,19 +106,19 @@ void VXMController::batchMoveAddMovement(Direction d, int units) {
     switch (d) {
         case MOVE_UP:
             batchMovement.append("I1M-");
-            steps = QByteArray::number((int) (units * yStepsPerUnit));
+            steps = QByteArray::number(units);
             break;
         case MOVE_DOWN:
             batchMovement.append("I1M");
-            steps = QByteArray::number((int) (units * yStepsPerUnit));
+            steps = QByteArray::number(units);
             break;
         case MOVE_LEFT:
             batchMovement.append("I2M-");
-            steps = QByteArray::number((int) (units * xStepsPerUnit));
+            steps = QByteArray::number(units);
             break;
         case MOVE_RIGHT:
             batchMovement.append("I2M");
-            steps = QByteArray::number((int) (units * xStepsPerUnit));
+            steps = QByteArray::number(units);
             break;
     }
 
@@ -143,16 +136,6 @@ void VXMController::batchMoveExec() {
     if (loggedWrite(batchMovement) == -1) {
         QMessageBox::critical(0,"Error", "Could not write to serial port");
     }
-}
-
-void VXMController::setXStepsPerUnit(double steps) {
-    this->xStepsPerUnit = steps;
-    hasBeenCalibrated = true;
-}
-
-void VXMController::setYStepsPerUnit(double steps) {
-    this->yStepsPerUnit = steps;
-    hasBeenCalibrated = true;
 }
 
 void VXMController::serialReadyReadSlot() {

@@ -10,9 +10,7 @@
 #include <QLabel>
 #include <QCamera>
 #include <QCameraViewfinder>
-#include <QGraphicsView>
-#include <QGraphicsScene>
-#include <QGraphicsProxyWidget>
+#include <QSettings>
 
 namespace Ui {
     class MainWindow;
@@ -79,8 +77,10 @@ private:
 
     bool inCalibrationMode;
     int calibrationStep;
-    double tmpXStepsPerPixel;
-    double tmpYStepsPerPixel;
+    double tmpXStepsPerFOV;
+    double tmpYStepsPerFOV;
+
+    QSettings appSettings;
 };
 
 #endif

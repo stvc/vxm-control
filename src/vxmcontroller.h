@@ -29,10 +29,7 @@ public:
     void batchMoveAddMovement(Direction, int);
     void batchMoveExec();
 
-    void setXStepsPerUnit(double);
-    void setYStepsPerUnit(double);
     bool isSerialOpen();
-    bool hasControllerBeenCalibrated();
 
 signals:
     void serialConnected();
@@ -47,10 +44,7 @@ private:
     int loggedWrite(QByteArray);
 
     QSerialPort *serialConnection;
-    double xStepsPerUnit;
-    double yStepsPerUnit;
     bool isConnected;
-    bool hasBeenCalibrated;
     bool enteredProgram;
 
     QByteArray batchMovement;

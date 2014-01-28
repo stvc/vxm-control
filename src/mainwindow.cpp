@@ -6,7 +6,8 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     shapeStart(0,0),
-    shapeEnd(0,0)
+    shapeEnd(0,0),
+    appSettings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller")
 {
     ui->setupUi(this);
     serialDialog = new SerialConfigDialog(this);
@@ -155,29 +156,39 @@ void MainWindow::on_btnMove_clicked() {
     }
     else if (shape == DrawableViewfinder::Line) {
         // points should be up to date from drawing_updated() slot
-        int x = crossHairs.x() - shapeStart.x();
-        int y = crossHairs.y() - shapeStart.y();
+        // TODO: check step calculation logic
+        double x = crossHairs.x() - shapeStart.x();
+        int xSteps = (int)((x / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
+        double y = crossHairs.y() - shapeStart.y();
+        int ySteps = (int)((y / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
         controller->batchMoveNew();
-        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, x);
-        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, y);
+        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, xSteps);
+        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, ySteps);
         x = shapeEnd.x() - shapeStart.x();
+        xSteps = (int)((x / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
         y = shapeEnd.y() - shapeStart.y();
-        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, x);
-        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, y);
+        ySteps = (int)((y / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
+        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, xSteps);
+        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, ySteps);
         controller->batchMoveExec();
     }
     else if (shape == DrawableViewfinder::Rectangle) {
-        int x = crossHairs.x() - shapeStart.x();
-        int y = crossHairs.y() - shapeStart.y();
+        // TODO: check step calculation logic
+        double x = crossHairs.x() - shapeStart.x();
+        int xSteps = (int)((x / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
+        double y = crossHairs.y() - shapeStart.y();
+        int ySteps = (int)((y / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
         controller->batchMoveNew();
-        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, x);
-        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, y);
-        int width = shapeEnd.x() - shapeStart.x();
-        int height = shapeEnd.y() - shapeStart.y();
-        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, width);
-        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, height);
-        controller->batchMoveAddMovement(VXMController::MOVE_LEFT, width);
-        controller->batchMoveAddMovement(VXMController::MOVE_UP, height);
+        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, xSteps);
+        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, ySteps);
+        double width = shapeEnd.x() - shapeStart.x();
+        int widthSteps = (int)((width / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
+        double height = shapeEnd.y() - shapeStart.y();
+        int heightSteps = (int)((height / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
+        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, widthSteps);
+        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, heightSteps);
+        controller->batchMoveAddMovement(VXMController::MOVE_LEFT, widthSteps);
+        controller->batchMoveAddMovement(VXMController::MOVE_UP, heightSteps);
         controller->batchMoveExec();
     }
 }
@@ -195,9 +206,9 @@ void MainWindow::on_btnCalMoveY_clicked() {
 }
 
 void MainWindow::on_btnCalSave_clicked() {
-    // save calibration
-    controller->setXStepsPerUnit(tmpXStepsPerPixel);
-    controller->setYStepsPerUnit(tmpYStepsPerPixel);
+    appSettings.setValue("calibration/widthInSteps", tmpXStepsPerFOV);
+    appSettings.setValue("calibration/heightInSteps", tmpYStepsPerFOV);
+
     crossHairs = shapeDrawer->getEndPoint();
     // reset ui
     ui->btnCalibrate->click();
@@ -250,7 +261,7 @@ void MainWindow::drawing_updated() {
 }
 
 void MainWindow::calibration_step_updated() {
-    double pixels = 0;
+    double sections = 1;
     switch (calibrationStep) {
         case 0:
             // Instruction1: Set point
@@ -286,8 +297,8 @@ void MainWindow::calibration_step_updated() {
             shapeDrawer->freezePoints(false);
             break;
         case 3:
-            pixels = shapeDrawer->getEndPoint().x() - shapeDrawer->getStartPoint().x();
-            tmpXStepsPerPixel = ui->spinBoxCalXSteps->value() / pixels;
+            sections = shapeDrawer->width() / (shapeDrawer->getEndPoint().x() - shapeDrawer->getStartPoint().x());
+            tmpXStepsPerFOV = ui->spinBoxCalXSteps->value() * sections;
             // Instruction4: Move in Y direction
             ui->labelInstruction3->setEnabled(false);
             ui->labelInstruction4->setEnabled(true);
@@ -307,8 +318,8 @@ void MainWindow::calibration_step_updated() {
             shapeDrawer->freezePoints(false);
             break;
         case 5:
-            pixels = shapeDrawer->getEndPoint().y() - shapeDrawer->getStartPoint().y();
-            tmpYStepsPerPixel = ui->spinBoxCalYSteps->value() / pixels;
+            sections = shapeDrawer->height() / (shapeDrawer->getEndPoint().y() - shapeDrawer->getStartPoint().y());
+            tmpYStepsPerFOV = ui->spinBoxCalYSteps->value() * sections;
             // Instruction6: Mark crosshairs
             ui->labelInstruction5->setEnabled(false);
             ui->labelInstruction6->setEnabled(true);
@@ -353,9 +364,11 @@ void MainWindow::refreshMoveBtnState() {
     // do nothing if controller isn't connected
     if (!this->controller->isSerialOpen())
         return;
+
     // do nothing if controller hasn't been calibrated
-    if (!this->controller->hasControllerBeenCalibrated())
+    if (appSettings.value("calibration/widthInSteps").isNull() || appSettings.value("calibration/heightInSteps").isNull())
         return;
+
     // make sure that either user is moving manually, or user has drawn a shape
     if (shapeDrawn || this->ui->radioDrawManual->isChecked())
         this->ui->btnMove->setEnabled(true);
