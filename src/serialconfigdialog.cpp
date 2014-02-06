@@ -29,6 +29,12 @@ int SerialConfigDialog::exec() {
         ui->labelPortInfo->setText("");
     return QDialog::exec();
 }
+
+void SerialConfigDialog::setSerialDevice(QString portname) {
+    currentSettings.portName = portname;
+    hasBeenConfigured = true;
+}
+
 bool SerialConfigDialog::getHasBeenConfigured() {
     return hasBeenConfigured;
 }

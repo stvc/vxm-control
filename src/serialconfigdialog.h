@@ -19,6 +19,7 @@ public:
 
     int exec();
 
+    void setSerialDevice(QString);
     bool getHasBeenConfigured();
     VXMController::SerialSettings getSerialSettings() const;
 

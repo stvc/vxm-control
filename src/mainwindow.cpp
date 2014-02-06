@@ -11,6 +11,10 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     serialDialog = new SerialConfigDialog(this);
+    // check if serial is already configured
+    if (!appSettings.value("serialDevice/portName").isNull())
+        serialDialog->setSerialDevice(appSettings.value("serialDevice/portName").toString());
+
     cameraDialog = new CameraConfigDialog(this);
     labelConnectionStatus = new QLabel("Status: Not Connected");
     labelConnectionStatus->setMinimumWidth(200);
