@@ -52,7 +52,7 @@ void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
     int x = event->x();
     int y = event->y();
 
-    startPoint = QPoint(x,y);
+    if (shape != EndPoint) startPoint = QPoint(x,y);
     endPoint = QPoint(x,y);
     update();
 }
