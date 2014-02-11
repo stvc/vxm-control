@@ -157,7 +157,7 @@ void VXMController::serialReadyReadSlot() {
     if (data == "^") {
         if (enteredProgram) {
             enteredProgram = false;
-            loggedWrite("C\n");
+            loggedWrite("C\nR");
         }
         else
             emit serialReady();

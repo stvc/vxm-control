@@ -269,6 +269,9 @@ direction</string>
               <property name="enabled">
                <bool>false</bool>
               </property>
+              <property name="maximum">
+               <number>999</number>
+              </property>
              </widget>
             </item>
             <item>
@@ -318,6 +321,9 @@ direction</string>
              <widget class="QSpinBox" name="spinBoxCalYSteps">
               <property name="enabled">
                <bool>false</bool>
+              </property>
+              <property name="maximum">
+               <number>999</number>
               </property>
              </widget>
             </item>
@@ -413,7 +419,7 @@ location</string>
      <x>0</x>
      <y>0</y>
      <width>879</width>
-     <height>28</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_File">
@@ -452,7 +458,7 @@ location</string>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGrpDrawType"/>
   <buttongroup name="btnGrpDirection"/>
+  <buttongroup name="btnGrpDrawType"/>
  </buttongroups>
 </ui>

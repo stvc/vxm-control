@@ -213,7 +213,8 @@ void MainWindow::on_btnCalSave_clicked() {
     appSettings.setValue("calibration/widthInSteps", tmpXStepsPerFOV);
     appSettings.setValue("calibration/heightInSteps", tmpYStepsPerFOV);
 
-    crossHairs = shapeDrawer->getEndPoint();
+    // crossHairs = shapeDrawer->getEndPoint();
+    crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
     // reset ui
     ui->btnCalibrate->click();
 }
