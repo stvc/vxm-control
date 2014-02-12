@@ -4,3 +4,4 @@ release/*
 Makefile*
 *.swp
 ui_*.h
+tags
