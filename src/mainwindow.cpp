@@ -161,9 +161,9 @@ void MainWindow::on_btnMove_clicked() {
     else if (shape == DrawableViewfinder::Line) {
         // points should be up to date from drawing_updated() slot
         // TODO: check step calculation logic
-        double x = crossHairs.x() - shapeStart.x();
+        double x = shapeStart.x() - crossHairs.x();
         int xSteps = (int)((x / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
-        double y = crossHairs.y() - shapeStart.y();
+        double y = shapeStart.y() - crossHairs.y();
         int ySteps = (int)((y / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
         controller->batchMoveNew();
         controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, xSteps);
@@ -178,9 +178,9 @@ void MainWindow::on_btnMove_clicked() {
     }
     else if (shape == DrawableViewfinder::Rectangle) {
         // TODO: check step calculation logic
-        double x = crossHairs.x() - shapeStart.x();
+        double x = shapeStart.x() - crossHairs.x();
         int xSteps = (int)((x / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
-        double y = crossHairs.y() - shapeStart.y();
+        double y = shapeStart.y() - crossHairs.y();
         int ySteps = (int)((y / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
         controller->batchMoveNew();
         controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, xSteps);
@@ -263,6 +263,7 @@ void MainWindow::drawing_updated() {
     else if (ui->btnGrpDrawType->checkedId() != DRAW_MANUAL) {
         shapeDrawn = true;
     }
+    refreshMoveBtnState();
 }
 
 void MainWindow::calibration_step_updated() {
