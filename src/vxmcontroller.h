@@ -42,10 +42,10 @@ private slots:
 
 private:
     int loggedWrite(QByteArray);
+    QByteArray generateCommand(Direction, int);
 
     QSerialPort *serialConnection;
     bool isConnected;
-    bool enteredProgram;
 
     QByteArray batchMovement;
 };
