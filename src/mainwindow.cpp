@@ -144,6 +144,9 @@ void MainWindow::on_btnGrpDrawType_buttonClicked(int id) {
 }
 
 void MainWindow::on_btnMove_clicked() {
+    // tmp work around for crosshair config being shoddy
+    crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
+
     DrawableViewfinder::Shape shape = shapeDrawer->getShape();
     if (shape == DrawableViewfinder::None) {
         VXMController::Direction d;
@@ -210,11 +213,18 @@ void MainWindow::on_btnCalMoveY_clicked() {
 }
 
 void MainWindow::on_btnCalSave_clicked() {
+
+    if (tmpXStepsPerFOV < 0)
+        tmpXStepsPerFOV *= -1;
+    if (tmpYStepsPerFOV < 0)
+        tmpYStepsPerFOV *= -1;
+
     appSettings.setValue("calibration/widthInSteps", tmpXStepsPerFOV);
     appSettings.setValue("calibration/heightInSteps", tmpYStepsPerFOV);
 
     // crossHairs = shapeDrawer->getEndPoint();
     crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
+
     // reset ui
     ui->btnCalibrate->click();
 }

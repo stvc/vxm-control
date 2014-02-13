@@ -110,20 +110,20 @@ QByteArray VXMController::generateCommand(Direction d, int units) {
     // switch direction if asked to move a negative number of units
     if (units < 0) {
         units *= -1;
-        if (d == MOVE_UP)    d = MOVE_DOWN;
-        if (d == MOVE_DOWN)  d = MOVE_UP;
-        if (d == MOVE_RIGHT) d = MOVE_LEFT;
-        if (d == MOVE_LEFT)  d = MOVE_RIGHT;
+        if      (d == MOVE_UP)    d = MOVE_DOWN;
+        else if (d == MOVE_DOWN)  d = MOVE_UP;
+        else if (d == MOVE_RIGHT) d = MOVE_LEFT;
+        else if (d == MOVE_LEFT)  d = MOVE_RIGHT;
     }
 
     QByteArray steps;
     switch (d) {
         case MOVE_UP:
-            r.append("I1M-");
+            r.append("I1M");
             steps = QByteArray::number(units);
             break;
         case MOVE_DOWN:
-            r.append("I1M");
+            r.append("I1M-");
             steps = QByteArray::number(units);
             break;
         case MOVE_LEFT:
