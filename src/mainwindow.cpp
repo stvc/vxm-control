@@ -73,6 +73,8 @@ void MainWindow::on_actionSerialConfig_triggered() {
         controller->closeSerialConnection();
     }
     if (serialDialog->exec()) {
+        // save settings
+        appSettings.setValue("serialDevice/portName", serialDialog->getSerialSettings().portName);
     }
 }
 
