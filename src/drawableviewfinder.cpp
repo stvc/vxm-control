@@ -1,18 +1,35 @@
 #include "drawableviewfinder.h"
 
 DrawableViewfinder::DrawableViewfinder(QWidget *parent) :
-    QWidget(parent),
-    startPoint(0,0),
-    endPoint(0,0)
+    QWidget(parent)
 {
-    shape = None;
-    pointsFrozen = false;
+    m_mode = Pointer;
+    m_selectedEntity = NULL;
+
     setAutoFillBackground(false);
 
     frame = new QImage(QSize(0,0), QImage::Format_ARGB32_Premultiplied);
+    this->m_freezeFrame = false;
+
+    setFocusPolicy(Qt::StrongFocus);
+    setMouseTracking(true);
 }
 
 DrawableViewfinder::~DrawableViewfinder() {
+    delete frame;
+}
+
+void DrawableViewfinder::setImage(QImage img) {
+    if (!m_freezeFrame) {
+        delete this->frame;
+        this->frame = new QImage(img);
+    }
+
+    this->update();
+}
+
+void DrawableViewfinder::freezeFrame(bool b) {
+    m_freezeFrame = b;
 }
 
 void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
@@ -23,121 +40,145 @@ void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
                 Qt::PenCapStyle(Qt::FlatCap),
                 Qt::PenJoinStyle(Qt::MiterJoin)));
     painter.setBackground(Qt::NoBrush);
-    switch (shape) {
-        case Line:
-            painter.drawLine(QLine(startPoint, endPoint));
-            break;
-        case Rectangle:
-            painter.drawRect(QRect(startPoint, endPoint));
-            break;
-        case SinglePoint:
-            painter.drawPoint(endPoint);
-            break;
-        case StartPoint:
-            painter.drawPoint(startPoint);
-            break;
-        case EndPoint:
-            painter.drawPoint(startPoint);
-            painter.drawPoint(endPoint);
-            break;
-        default:
-            break;
+
+    if (!m_entities.empty()) {
+        for (std::list<DrawableEntity*>::iterator it=m_entities.begin(); it != m_entities.end(); ++it) {
+            DrawableEntity* tmp = *it;
+            tmp->paintEntity(painter);
+        }
     }
 }
 
-void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
-    if (shape == None || pointsFrozen) {
-        return;
+void DrawableViewfinder::keyPressEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Delete && m_selectedEntity != NULL) {
+        removeSelectedEntity();
     }
-    int x = event->x();
-    int y = event->y();
+    else {
+        QWidget::keyPressEvent(event);
+    }
+}
+void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
+    if (m_mode == Pointer) {
+        if (m_selectedEntity != NULL) {
+            if (!m_selectedEntity->isPointOnEntity(event->pos())) {
+                m_selectedEntity->setSelected(false);
+                m_selectedEntity = NULL;
+            }
+            else {
+                m_selectedEntity->selectControlPoint(event->pos());
+            }
+        }
+        else {
+            m_clickPosition = event->pos();
+        }
+    }
+    else if (m_mode == Line) {
+        m_entities.push_back(new LineEntity(event->pos()));
+        m_selectedEntity = m_entities.back();
+        m_selectedEntity->setSelected(true);
+        m_selectedEntity->selectControlPoint(event->pos());
+    }
+    else if (m_mode == Rectangle) {
+        m_entities.push_back(new RectangleEntity(event->pos()));
+        m_selectedEntity = m_entities.back();
+        m_selectedEntity->setSelected(true);
+        m_selectedEntity->selectControlPoint(event->pos());
+    }
 
-    if (shape != EndPoint) startPoint = QPoint(x,y);
-    endPoint = QPoint(x,y);
     update();
 }
 
 void DrawableViewfinder::mouseReleaseEvent(QMouseEvent* event) {
-    if (shape == None || pointsFrozen) {
-        return;
-    }
-    int x = event->x();
-    int y = event->y();
+    if (m_selectedEntity != NULL) {
+        // reset m_selectedEntity's control point if necessary
+        m_selectedEntity->deselectControlPoint();
 
-    updateEndPoint(QPoint(x,y));
+        // just drew a new shape
+        if (m_mode != Pointer) {
+            emit entityAdded();
+        }
+        emit entityChanged();
+    }
+    else {
+        if (event->pos() == m_clickPosition) {
+            // user clicked in a single position without moving
+            // check if point is on any entities, and if it is select that
+            // entity and emit signal
+            for (std::list<DrawableEntity*>::iterator it = m_entities.begin(); it != m_entities.end(); ++it) {
+                if ((*it)->isPointOnEntity(event->pos())) {
+                    (*it)->setSelected(true);
+                    m_selectedEntity = *it;
+                    emit entityChanged();
+                    break;
+                }
+            }
+        }
+    }
+
     update();
 }
 
 void DrawableViewfinder::mouseMoveEvent(QMouseEvent* event) {
-    if (shape == None || pointsFrozen) {
-        return;
+    if (m_selectedEntity != NULL) {
+//        if (event->button() == Qt::NoButton) {
+//            setCursor(m_selectedEntity->getMouseCursorAtPosition(event->pos()));
+//        }
+//        else {
+            m_selectedEntity->moveControlPointTo(event->pos());
+            emit entityChanged();
+//        }
     }
-    int x = event->x();
-    int y = event->y();
 
-    updateEndPoint(QPoint(x,y));
     update();
 }
 
-void DrawableViewfinder::setShape(Shape s) {
-    shape = s;
-    update();
+bool DrawableViewfinder::isEntitySelected() {
+    return (m_selectedEntity != NULL);
 }
 
-DrawableViewfinder::Shape DrawableViewfinder::getShape() {
-    return shape;
+void DrawableViewfinder::setEntity(Entity e) {
+    m_mode = e;
 }
 
-QPoint DrawableViewfinder::getStartPoint() {
-    return startPoint;
+DrawableViewfinder::Entity DrawableViewfinder::getEntity() {
+    return m_mode;
 }
 
-QPoint DrawableViewfinder::getEndPoint() {
-    return endPoint;
+void DrawableViewfinder::addEntity(DrawableEntity* e) {
+    m_entities.push_back(e);
 }
 
-void DrawableViewfinder::setStartPoint(QPoint p) {
-    startPoint = p;
-}
+void DrawableViewfinder::selectEntityAtPoint(QPoint p) {
+    // deselect currently selected
+    deselectEntity();
 
-void DrawableViewfinder::setImage(QImage img) {
-    delete this->frame;
-    this->frame = new QImage(img);
-    this->update();
-}
-
-void DrawableViewfinder::resetPoints() {
-    startPoint = QPoint(0,0);
-    endPoint = QPoint(0,0);
-    update();
-}
-
-void DrawableViewfinder::freezePoints(bool f) {
-    pointsFrozen = f;
-}
-
-void DrawableViewfinder::updateEndPoint(QPoint end) {
-    if (shape == StartPoint || shape == SinglePoint) {
-        endPoint = end;
-        startPoint = end;
-    }
-    if (shape == EndPoint) {
-        endPoint = end;
-    }
-    else if (shape == Line) {
-        int xdiff = end.x() - startPoint.x();
-        int ydiff = end.y() - startPoint.y();
-        if (xdiff < 0) xdiff *= -1;
-        if (ydiff < 0) ydiff *= -1;
-        if (xdiff > ydiff) { // draw horizontal line
-            endPoint = QPoint(end.x(), startPoint.y());
-        }
-        else {
-            endPoint = QPoint(startPoint.x(), end.y());
+    // select
+    for (std::list<DrawableEntity*>::iterator it = m_entities.begin(); it != m_entities.end(); ++it) {
+        DrawableEntity* tmp = *it;
+        if (tmp->isPointOnEntity(p)) {
+            tmp->setSelected(true);
+            m_selectedEntity = tmp;
+            break;
         }
     }
-    else if (shape == Rectangle) {
-        endPoint = end;
-    }
-    emit pointsChanged();
 }
+
+void DrawableViewfinder::deselectEntity() {
+    if (m_selectedEntity != NULL) {
+        m_selectedEntity->setSelected(false);
+        m_selectedEntity = NULL;
+    }
+}
+
+void DrawableViewfinder::removeSelectedEntity() {
+    if (m_selectedEntity != NULL) {
+        // TODO: possible memory leaks
+        m_entities.remove(m_selectedEntity);
+        m_selectedEntity = NULL;
+    }
+}
+
+std::list<DrawableEntity*> *DrawableViewfinder::getListOfEntities() {
+    return &m_entities;
+}
+

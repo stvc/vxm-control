@@ -1,7 +1,10 @@
 #ifndef VXMCONTROLLER_H
 #define VXMCONTROLLER_H
 
+#include <list>
+#include <QtCore/qmath.h>
 #include <QObject>
+#include <QPoint>
 #include <QtSerialPort/QSerialPort>
 
 class VXMController : public QObject {
@@ -19,15 +22,36 @@ public:
         QSerialPort::FlowControl flowControl;
     };
 
+    enum CommandType { LINE, CURVE, PAUSE, SAVE_POSITION, RETURN_TO_SAVED_POSITION,/* START_CONTINUOUS_MODE,
+        END_CONTINUOUS_MODE,*/ OUTPUT_HIGH, OUTPUT_LOW };
+
+    struct MovementVect {
+        int time; // in tenths of a millisecond
+        int xSpeed;
+        int ySpeed;
+        int xDist;
+        int yDist;
+    };
+
     VXMController(QObject *parent = 0);
 
     void openSerialConnection(SerialSettings settings);
     void closeSerialConnection();
-    void move(Direction, int);
 
-    void batchMoveNew();
-    void batchMoveAddMovement(Direction, int);
-    void batchMoveExec();
+    void move(QPoint); // QPoint is a vector
+    void savePosition();
+    void returnToSavedPosition();
+
+    void newQueue();
+    void addSavePositionToQueue();
+    void addReturnToQueue();
+    void addMoveToQueue(QPoint); // QPoint is a vector
+    void addCurveToQueue(std::list<QPoint>); // curve is list of vectors (relative points, not absolute)
+    void addPauseToQueue(int); // pause for tenths of a millisecond
+    void addOutputHighToQueue();
+    void addOutputLowToQueue();
+    double getEstimatedExecTime(); // in tenths of a milliseconds
+    void execQueue();
 
     bool isSerialOpen();
 
@@ -42,12 +66,19 @@ private slots:
 
 private:
     int loggedWrite(QByteArray);
-    QByteArray generateCommand(Direction, int);
+    MovementVect generateMovementVect(QPoint);
+    double lengthOfVect(QPoint);
 
-    QSerialPort *serialConnection;
-    bool isConnected;
+    QSerialPort *m_serialConnection;
+    bool m_connected;
 
-    QByteArray batchMovement;
+    int m_maxSpeed;
+    int m_estimatedTime; // tenths of a milliseconds
+
+    std::list<CommandType> m_queuedCommands;
+    std::list<MovementVect> m_queuedLines;
+    std::list<std::list<MovementVect> > m_queuedCurves;
+    std::list<int> m_queuedPauses;
 };
 
 #endif

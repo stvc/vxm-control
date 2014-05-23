@@ -1,7 +1,12 @@
 .clang_complete
+
 debug/*
 release/*
+
 Makefile*
 *.swp
+
 ui_*.h
+qrc_*.cpp
+
 tags

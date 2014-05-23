@@ -5,11 +5,41 @@
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    shapeStart(0,0),
-    shapeEnd(0,0),
     appSettings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller")
 {
     ui->setupUi(this);
+
+    // set up toolbar icons
+    ui->actionPointerTool->setIcon(QIcon(":/toolbarIcons/toolbarIcons/arrow.png"));
+    ui->actionPointerTool->setData("pointer");
+    ui->actionLineTool->setIcon(QIcon(":/toolbarIcons/toolbarIcons/draw-line.png"));
+    ui->actionLineTool->setData("line");
+    ui->actionRectangleTool->setIcon(QIcon(":/toolbarIcons/toolbarIcons/draw-rectangle.png"));
+    ui->actionRectangleTool->setData("rectangle");
+    ui->actionPolygonTool->setIcon(QIcon(":/toolbarIcons/toolbarIcons/draw-polygon.png"));
+    ui->actionPolygonTool->setData("polygon");
+    ui->actionCircleTool->setIcon(QIcon(":/toolbarIcons/toolbarIcons/draw-circle.png"));
+    ui->actionCircleTool->setData("circle");
+    ui->actionCurveTool->setIcon(QIcon(":/toolbarIcons/toolbarIcons/draw-curve.png"));
+    ui->actionCurveTool->setData("curve");
+
+    toolbarActions = new QActionGroup(this);
+    toolbarActions->addAction(ui->actionPointerTool);
+    toolbarActions->addAction(ui->actionLineTool);
+    toolbarActions->addAction(ui->actionRectangleTool);
+    toolbarActions->addAction(ui->actionPolygonTool);
+    toolbarActions->addAction(ui->actionCircleTool);
+    toolbarActions->addAction(ui->actionCurveTool);
+    ui->actionPointerTool->setChecked(true);
+
+    // TODO: reenable these after implementation
+    ui->actionPolygonTool->setEnabled(false);
+    ui->actionCircleTool->setEnabled(false);
+    ui->actionCurveTool->setEnabled(false);
+
+
+    // set up dialogs
+
     serialDialog = new SerialConfigDialog(this);
     // check if serial is already configured
     if (!appSettings.value("serialDevice/portName").isNull())
@@ -25,9 +55,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->btnGrpDirection->setId(ui->radioUp, VXMController::MOVE_UP);
     ui->btnGrpDirection->setId(ui->radioLeft, VXMController::MOVE_LEFT);
     ui->btnGrpDirection->setId(ui->radioRight, VXMController::MOVE_RIGHT);
-    ui->btnGrpDrawType->setId(ui->radioDrawManual, DRAW_MANUAL);
-    ui->btnGrpDrawType->setId(ui->radioDrawLine, DRAW_LINE);
-    ui->btnGrpDrawType->setId(ui->radioDrawRectangle, DRAW_RECT);
+    ui->btnGrpDrawType->setId(ui->radioDrawManual, MANUAL_MOVE);
+    ui->btnGrpDrawType->setId(ui->radioDrawShapes, DRAW_ENTITIES);
+
 
     QList<QByteArray> cameraDevices = QCamera::availableDevices();
     camera = new QCamera(cameraDevices.first());
@@ -39,9 +69,11 @@ MainWindow::MainWindow(QWidget *parent) :
     l->addWidget(shapeDrawer);
     ui->displayFrame->setLayout(l);
 
-    shapeDrawn = false;
     inCalibrationMode = false;
     calibrationStep = 0;
+
+    m_entitiesQueuedForDrawing = false;
+    crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
 
     camera->start();
 
@@ -53,7 +85,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(camera, SIGNAL(error(QCamera::Error)), this, SLOT(camera_error(QCamera::Error)));
 
-    connect(shapeDrawer, SIGNAL(pointsChanged()), this, SLOT(drawing_updated()));
+    connect(shapeDrawer, SIGNAL(entityChanged()), this, SLOT(drawing_updated()));
+    connect(shapeDrawer, SIGNAL(entityAdded()), this, SLOT(entity_added()));
+
+    connect(toolbarActions, SIGNAL(triggered(QAction*)), this, SLOT(toolbar_action_triggered(QAction*)));
+
     connect(this, SIGNAL(calibrationStepChanged()), this, SLOT(calibration_step_updated()));
 
     // temporary while I create the calibration routine
@@ -105,6 +141,8 @@ void MainWindow::on_btnConnect_clicked() {
 }
 
 void MainWindow::on_btnCalibrate_clicked() {
+    // TODO: rework calibration routine for new Shape system
+    /*
     if (ui->btnCalibrate->text() == "Cancel") {
         ui->stackedWidget->setCurrentWidget(ui->pageMove);
         ui->btnCalibrate->setText("Calibrate");
@@ -122,96 +160,68 @@ void MainWindow::on_btnCalibrate_clicked() {
         calibrationStep = 0;
         emit calibrationStepChanged();
     }
+    */
 }
 
 void MainWindow::on_btnGrpDrawType_buttonClicked(int id) {
-    shapeDrawer->resetPoints();
-    switch (id) {
-        case DRAW_MANUAL:
-            shapeDrawer->setShape(DrawableViewfinder::None);
-            toggleManualControls(true);
-            break;
-        case DRAW_LINE:
-            shapeDrawer->setShape(DrawableViewfinder::Line);
-            toggleManualControls(false);
-            break;
-        case DRAW_RECT:
-            shapeDrawer->setShape(DrawableViewfinder::Rectangle);
-            toggleManualControls(false);
-            break;
-        default:
-            break;
-    }
     refreshMoveBtnState();
+
+    if (id == MANUAL_MOVE) {
+        toggleManualControls(true);
+    }
+    else if (id == DRAW_ENTITIES) {
+        toggleManualControls(false);
+    }
 }
 
 void MainWindow::on_btnMove_clicked() {
-    // tmp work around for crosshair config being shoddy
-    crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
-
-    DrawableViewfinder::Shape shape = shapeDrawer->getShape();
-    if (shape == DrawableViewfinder::None) {
-        VXMController::Direction d;
+    if (ui->btnGrpDrawType->checkedId() == MANUAL_MOVE) {
+        QPoint p;
         if (ui->radioUp->isChecked())
-            d = VXMController::MOVE_UP;
+            p = QPoint(0,-1);
         else if (ui->radioDown->isChecked())
-            d = VXMController::MOVE_DOWN;
+            p = QPoint(0,1);
         else if (ui->radioRight->isChecked())
-            d = VXMController::MOVE_RIGHT;
+            p = QPoint(1,0);
         else
-            d = VXMController::MOVE_LEFT;
+            p = QPoint(-1,0);
         int s = ui->spinBoxSteps->value();
-        controller->move(d,s);
+        p *= s;
+        controller->move(p);
     }
-    else if (shape == DrawableViewfinder::Line) {
-        // points should be up to date from drawing_updated() slot
-        // TODO: check step calculation logic
-        double x = shapeStart.x() - crossHairs.x();
-        int xSteps = (int)((x / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
-        double y = shapeStart.y() - crossHairs.y();
-        int ySteps = (int)((y / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
-        controller->batchMoveNew();
-        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, xSteps);
-        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, ySteps);
-        x = shapeEnd.x() - shapeStart.x();
-        xSteps = (int)((x / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
-        y = shapeEnd.y() - shapeStart.y();
-        ySteps = (int)((y / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
-        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, xSteps);
-        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, ySteps);
-        controller->batchMoveExec();
-    }
-    else if (shape == DrawableViewfinder::Rectangle) {
-        // TODO: check step calculation logic
-        double x = shapeStart.x() - crossHairs.x();
-        int xSteps = (int)((x / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
-        double y = shapeStart.y() - crossHairs.y();
-        int ySteps = (int)((y / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
-        controller->batchMoveNew();
-        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, xSteps);
-        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, ySteps);
-        double width = shapeEnd.x() - shapeStart.x();
-        int widthSteps = (int)((width / shapeDrawer->width()) * appSettings.value("calibration/widthInSteps", 1).toInt() + 0.5);
-        double height = shapeEnd.y() - shapeStart.y();
-        int heightSteps = (int)((height / shapeDrawer->height()) * appSettings.value("calibration/heightInSteps", 1).toInt() + 0.5);
-        controller->batchMoveAddMovement(VXMController::MOVE_RIGHT, widthSteps);
-        controller->batchMoveAddMovement(VXMController::MOVE_DOWN, heightSteps);
-        controller->batchMoveAddMovement(VXMController::MOVE_LEFT, widthSteps);
-        controller->batchMoveAddMovement(VXMController::MOVE_UP, heightSteps);
-        controller->batchMoveExec();
+    else if (ui->btnGrpDrawType->checkedId() == DRAW_ENTITIES) {
+
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+        double xScale = settings.value("calibration/widthInSteps", 1).toDouble() / shapeDrawer->width();
+        double yScale = settings.value("calibration/heightInSteps", 1).toDouble() / shapeDrawer->height();
+        double skew = 0; // TODO: implement axis skew calibration
+        m_translator = PointTranslator(xScale, yScale, skew, crossHairs);
+
+        m_entitiesToDraw = shapeDrawer->getListOfEntities();
+        if (m_entitiesToDraw->size() == 0)
+            return;
+
+        m_entitiesQueuedForDrawing = true;
+
+        for (std::list<DrawableEntity*>::iterator it = m_entitiesToDraw->begin(); it != m_entitiesToDraw->end(); it++) {
+            (*it)->setOutlined(false);
+        }
+
+        m_currentEntity = m_entitiesToDraw->begin();
+        drawEntity(*m_currentEntity, m_translator);
     }
 }
 
 void MainWindow::on_btnCalMoveX_clicked() {
     ui->btnCalMoveX->setEnabled(false);
     ui->spinBoxCalXSteps->setEnabled(false);
-    controller->move(VXMController::MOVE_RIGHT, ui->spinBoxCalXSteps->value());
+    controller->move(QPoint(ui->spinBoxCalXSteps->value(),0));
 }
 
 void MainWindow::on_btnCalMoveY_clicked() {
     ui->btnCalMoveY->setEnabled(false);
     ui->spinBoxCalYSteps->setEnabled(false);
-    controller->move(VXMController::MOVE_DOWN, ui->spinBoxCalYSteps->value());
+    controller->move(QPoint(0,ui->spinBoxCalYSteps->value()));
 }
 
 void MainWindow::on_btnCalSave_clicked() {
@@ -243,15 +253,20 @@ void MainWindow::controller_disconnected() {
 }
 
 void MainWindow::controller_ready() {
-    if (inCalibrationMode) {
-        calibrationStep++;
-        emit calibrationStepChanged();
+    if (m_entitiesQueuedForDrawing) {
+        (*m_currentEntity)->setOutlined(true);
+        m_currentEntity++;
+        if (m_currentEntity != m_entitiesToDraw->end()) {
+            drawEntity(*m_currentEntity, m_translator);
+        }
+        else {
+            m_entitiesQueuedForDrawing = false;
+            refreshMoveBtnState();
+        }
+
     }
     else {
-        refreshMoveBtnState();
-        ui->btnCalibrate->setEnabled(true);
     }
-    this->ui->btnCalibrate->setEnabled(true);
 }
 
 void MainWindow::controller_busy() {
@@ -264,21 +279,44 @@ void MainWindow::camera_error(QCamera::Error /* e */) {
 }
 
 void MainWindow::drawing_updated() {
-    shapeStart = shapeDrawer->getStartPoint();
-    shapeEnd = shapeDrawer->getEndPoint();
-
-    // if in calibration mode, advance to the next step
-    if (inCalibrationMode) {
-        calibrationStep++;
-        emit calibrationStepChanged();
-    }
-    else if (ui->btnGrpDrawType->checkedId() != DRAW_MANUAL) {
-        shapeDrawn = true;
-    }
     refreshMoveBtnState();
 }
 
+void MainWindow::entity_added() {
+    ui->actionPointerTool->trigger();
+}
+
+void MainWindow::toolbar_action_triggered(QAction *qa) {
+    QString data = qa->data().toString();
+
+    if (data == "pointer") {
+        shapeDrawer->setEntity(DrawableViewfinder::Pointer);
+    }
+    else if (data == "line") {
+        shapeDrawer->deselectEntity();
+        shapeDrawer->setEntity(DrawableViewfinder::Line);
+    }
+    else if (data == "rectangle") {
+        shapeDrawer->deselectEntity();
+        shapeDrawer->setEntity(DrawableViewfinder::Rectangle);
+    }
+    else if (data == "polygon") {
+        shapeDrawer->deselectEntity();
+        shapeDrawer->setEntity(DrawableViewfinder::Polygon);
+    }
+    else if (data == "circle") {
+        shapeDrawer->deselectEntity();
+        shapeDrawer->setEntity(DrawableViewfinder::Circle);
+    }
+    else if (data == "curve") {
+        shapeDrawer->deselectEntity();
+        shapeDrawer->setEntity(DrawableViewfinder::Curve);
+    }
+}
+
 void MainWindow::calibration_step_updated() {
+    // TODO: rework calibration routine for new Shape system
+    /*
     double sections = 1;
     switch (calibrationStep) {
         case 0:
@@ -353,6 +391,8 @@ void MainWindow::calibration_step_updated() {
             calibrationStep = 0;
             emit calibrationStepChanged();
     }
+
+    */
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -361,6 +401,8 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
     geo.setWidth(ui->displayFrame->width());
     geo.setHeight(ui->displayFrame->height());
     shapeDrawer->setGeometry(geo);
+
+    crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
 
     if (inCalibrationMode) {
         ui->btnCalibrate->click();
@@ -388,6 +430,71 @@ void MainWindow::refreshMoveBtnState() {
         return;
 
     // make sure that either user is moving manually, or user has drawn a shape
-    if (shapeDrawn || this->ui->radioDrawManual->isChecked())
+    if (shapeDrawer->getListOfEntities()->size() > 0 || this->ui->radioDrawManual->isChecked())
         this->ui->btnMove->setEnabled(true);
 }
+
+void MainWindow::drawEntity(DrawableEntity* ent, PointTranslator pt) {
+    controller->newQueue();
+    controller->addMoveToQueue(pt.translatePoint(ent->getStartPoint()));
+    controller->addOutputHighToQueue();
+
+    std::list<std::list<QPoint> > curves =  ent->getListOfCurves();
+    for (std::list<std::list<QPoint> >::iterator it = curves.begin(); it != curves.end(); it++) {
+        std::list<QPoint> translatedControlPoints = pt.translatePoints(*it);
+        std::list<QPoint> vects = controlPointsToVectors(translatedControlPoints);
+        if (it->size() == 1) { // first degree bezier curve (ie straight line)
+            controller->addMoveToQueue(vects.front());
+        }
+        else { // cubic bezier curve
+            controller->addCurveToQueue(vects);
+        }
+    }
+    controller->addOutputLowToQueue();
+    controller->addReturnToQueue();
+    ent->startOutlining(controller->getEstimatedExecTime() / 10);
+    controller->execQueue();
+}
+
+std::list<QPoint> MainWindow::controlPointsToVectors(std::list<QPoint> controlPoints) {
+    std::list<QPoint> vects;
+    if (controlPoints.size() == 2) { // straight line
+        QPoint p = controlPoints.back() - controlPoints.front();
+        vects.push_back(p);
+    }
+    else if (controlPoints.size() == 4) { // cubic bezier curve
+        QPoint ps[4];
+        int i = 0;
+        QPoint first = controlPoints.front();
+        for (std::list<QPoint>::iterator it = controlPoints.begin(); it != controlPoints.end(); it++) {
+            ps[i] = (*it) - first;
+            i++;
+        }
+
+        // convert from graph space to equation space
+        //  coefficients:
+        int a = ps[3].x() - 3 * ps[2].x() + 3 * ps[1].x() - ps[0].x();
+        int b = 3 * ps[2].x() - 6 * ps[1].x() + 3 * ps[0].x();
+        int c = 3 * ps[1].x() - 3 * ps[0].x();
+        int d = ps[0].x();
+
+        int e = ps[3].y() - 3 * ps[2].y() + 3 * ps[1].y() - ps[0].y();
+        int f = 3 * ps[2].y() - 6 * ps[1].y() + 3 * ps[0].y();
+        int g = 3 * ps[1].y() - e * ps[0].y();
+        int h = ps[0].y();
+
+        double x = 0;
+        double y = 0;
+        double t = 0;
+        for (int i=1; i < 26; i++) {
+            t = i * 1/25;
+            x = (((a*t + b)*t) + c)*t + d;
+            y = (((e*t + f)*t) + g)*t + h;
+
+            vects.push_back(QPoint(qFloor(x + 0.5), qFloor(y + 0.5)));
+        }
+    }
+    return vects;
+}
+
+

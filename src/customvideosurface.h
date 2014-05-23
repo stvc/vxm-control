@@ -22,7 +22,6 @@ private:
     DrawableViewfinder* m_widget;
     QImage* m_lastImage;
     bool m_mirror;
-
 };
 
 #endif

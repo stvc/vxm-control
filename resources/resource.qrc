@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/toolbarIcons">
+        <file>toolbarIcons/arrow.png</file>
+        <file>toolbarIcons/draw-circle.png</file>
+        <file>toolbarIcons/draw-curve.png</file>
+        <file>toolbarIcons/draw-freeform-line.png</file>
+        <file>toolbarIcons/draw-line.png</file>
+        <file>toolbarIcons/draw-polygon.png</file>
+        <file>toolbarIcons/draw-rectangle.png</file>
+    </qresource>
+</RCC>

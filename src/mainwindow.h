@@ -2,14 +2,18 @@
 #define MAINWINDOW_H
 
 #include "cameraconfigdialog.h"
-#include "serialconfigdialog.h"
 #include "customvideosurface.h"
 #include "drawableviewfinder.h"
+#include "pointtranslator.h"
+#include "serialconfigdialog.h"
 #include "vxmcontroller.h"
-#include <QMainWindow>
-#include <QLabel>
+#include <list>
+#include <QActionGroup>
 #include <QCamera>
 #include <QCameraViewfinder>
+#include <QLabel>
+#include <QMainWindow>
+#include <QPoint>
 #include <QSettings>
 
 namespace Ui {
@@ -21,15 +25,17 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    enum {DRAW_MANUAL, DRAW_LINE, DRAW_RECT};
+    enum {MANUAL_MOVE, DRAW_ENTITIES};
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
 private slots:
+    // menu bar actions
     void on_actionE_xit_triggered();
     void on_actionSerialConfig_triggered();
     void on_actionCameraConfig_triggered();
+
     void on_btnConnect_clicked();
     void on_btnCalibrate_clicked();
     void on_btnMove_clicked();
@@ -46,7 +52,9 @@ private slots:
     void camera_error(QCamera::Error);
 
     void drawing_updated();
+    void entity_added();
     void calibration_step_updated();
+    void toolbar_action_triggered(QAction*);
 
 signals:
     void calibrationStepChanged();
@@ -57,6 +65,10 @@ protected:
 private:
     void toggleManualControls(bool);
     void refreshMoveBtnState();
+    void drawEntity(DrawableEntity*, PointTranslator);
+    std::list<QPoint> controlPointsToVectors(std::list<QPoint>);
+
+    QActionGroup *toolbarActions;
 
     Ui::MainWindow *ui;
     SerialConfigDialog *serialDialog;
@@ -71,14 +83,21 @@ private:
 
     QPoint crossHairs;
 
+/*
     QPoint shapeStart;
     QPoint shapeEnd;
     bool shapeDrawn;
+*/
 
     bool inCalibrationMode;
     int calibrationStep;
     double tmpXStepsPerFOV;
     double tmpYStepsPerFOV;
+
+    PointTranslator m_translator;
+    bool m_entitiesQueuedForDrawing;
+    std::list<DrawableEntity*> *m_entitiesToDraw;
+    std::list<DrawableEntity*>::iterator m_currentEntity;
 
     QSettings appSettings;
 };
