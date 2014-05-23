@@ -208,6 +208,7 @@ void MainWindow::on_btnMove_clicked() {
         }
 
         m_currentEntity = m_entitiesToDraw->begin();
+        shapeDrawer->freezeFrame(true);
         drawEntity(*m_currentEntity, m_translator);
     }
 }
@@ -261,6 +262,7 @@ void MainWindow::controller_ready() {
         }
         else {
             m_entitiesQueuedForDrawing = false;
+            shapeDrawer->freezeFrame(false);
             refreshMoveBtnState();
         }
 
