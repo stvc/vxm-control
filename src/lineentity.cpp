@@ -15,9 +15,7 @@ LineEntity::LineEntity(QPoint p) :
 LineEntity::~LineEntity() {}
 
 bool LineEntity::isPointOnEntity(QPoint p) const {
-    if (findControlPoint(p) != None)
-        return true;
-    return false;
+    return (findControlPoint(p) != None);
 }
 
 Qt::CursorShape LineEntity::getMouseCursorAtPosition(QPoint p) const {
@@ -113,13 +111,6 @@ std::list<std::list<QPoint> > LineEntity::getListOfCurves() const {
     curves.push_back(c);
 
     return curves;
-
-    // TODO: clean up legacy code:
-    /*
-    std::list<QPoint>* r = new std::list<QPoint>();
-    r->push_back(m_endPoint - m_startPoint);
-    return r;
-    */
 }
 
 qreal LineEntity::calcDistance(QPoint a, QPoint b) const {

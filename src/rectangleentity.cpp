@@ -16,9 +16,7 @@ RectangleEntity::~RectangleEntity() {
 }
 
 bool RectangleEntity::isPointOnEntity(QPoint p) const {
-    if (findControlPoint(p) != None)
-        return true;
-    return false;
+    return (findControlPoint(p) != None);
 }
 
 Qt::CursorShape RectangleEntity::getMouseCursorAtPosition(QPoint p) const {
@@ -260,22 +258,6 @@ std::list<std::list<QPoint> > RectangleEntity::getListOfCurves() const {
     curves.push_back(c);
 
     return curves;
-
-    // TODO: clean up legacy code:
-    /*
-    QPoint topLeft(m_startPoint);
-    QPoint topRight(m_endPoint.x(), m_startPoint.y());
-    QPoint botLeft(m_startPoint.x(), m_endPoint.y());
-    QPoint botRight(m_endPoint);
-
-    std::list<QPoint>* points = new std::list<QPoint>();
-    points->push_back(topRight);
-    points->push_back(botRight);
-    points->push_back(botLeft);
-    points->push_back(topLeft);
-
-    return points;
-    */
 }
 
 qreal RectangleEntity::calcDistance(QPoint a, QPoint b) const {
