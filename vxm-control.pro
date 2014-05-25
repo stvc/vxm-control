@@ -10,6 +10,7 @@ SOURCES += src/main.cpp\
         src/rectangleentity.cpp\
         src/lineentity.cpp\
         src/circleentity.cpp\
+        src/polygonentity.cpp\
         src/pointtranslator.cpp
 
 HEADERS += src/mainwindow.h\
@@ -22,6 +23,7 @@ HEADERS += src/mainwindow.h\
         src/rectangleentity.h\
         src/lineentity.h\
         src/circleentity.h\
+        src/polygonentity.h\
         src/pointtranslator.h
 
 FORMS += src/mainwindow.ui\

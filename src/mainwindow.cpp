@@ -33,7 +33,6 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->actionPointerTool->setChecked(true);
 
     // TODO: reenable these after implementation
-    ui->actionPolygonTool->setEnabled(false);
     ui->actionCurveTool->setEnabled(false);
 
 

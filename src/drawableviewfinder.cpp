@@ -12,7 +12,7 @@ DrawableViewfinder::DrawableViewfinder(QWidget *parent) :
     this->m_freezeFrame = false;
 
     setFocusPolicy(Qt::StrongFocus);
-    setMouseTracking(true);
+//    setMouseTracking(true);
 }
 
 DrawableViewfinder::~DrawableViewfinder() {
@@ -53,6 +53,9 @@ void DrawableViewfinder::keyPressEvent(QKeyEvent* event) {
     if (event->key() == Qt::Key_Delete && m_selectedEntity != NULL) {
         removeSelectedEntity();
     }
+    else if (event->key() == Qt::Key_Escape && m_selectedEntity != NULL) {
+        deselectEntity();
+    }
     else {
         QWidget::keyPressEvent(event);
     }
@@ -86,6 +89,12 @@ void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
     }
     else if (m_mode == Circle) {
         m_entities.push_back(new CircleEntity(event->pos()));
+        m_selectedEntity = m_entities.back();
+        m_selectedEntity->setSelected(true);
+        m_selectedEntity->selectControlPoint(event->pos());
+    }
+    else if (m_mode == Polygon) {
+        m_entities.push_back(new PolygonEntity(event->pos()));
         m_selectedEntity = m_entities.back();
         m_selectedEntity->setSelected(true);
         m_selectedEntity->selectControlPoint(event->pos());
