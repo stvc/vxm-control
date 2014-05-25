@@ -75,7 +75,7 @@ void CircleEntity::paintEntity(QPainter& p) const {
         }
     }
 
-    int spanAngle = qFloor((-360 * 16 * percentComplete) + 89.5);
+    int spanAngle = qFloor((-360 * 16 * percentComplete) + 90.5);
 
 
     p.setPen(QPen(Qt::red, 2,
