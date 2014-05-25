@@ -467,6 +467,7 @@ std::list<QPoint> MainWindow::controlPointsToVectors(std::list<QPoint> controlPo
         QPoint ps[4];
         int i = 0;
         QPoint first = controlPoints.front();
+        // shift all points to the origin
         for (std::list<QPoint>::iterator it = controlPoints.begin(); it != controlPoints.end(); it++) {
             ps[i] = (*it) - first;
             i++;
@@ -484,15 +485,27 @@ std::list<QPoint> MainWindow::controlPointsToVectors(std::list<QPoint> controlPo
         int g = 3 * ps[1].y() - e * ps[0].y();
         int h = ps[0].y();
 
+        //  calculate set of points along the curve
         double x = 0;
         double y = 0;
         double t = 0;
-        for (int i=1; i < 26; i++) {
+        std::list<QPoint> points;
+        for (int i=0; i < 26; i++) {
             t = i * 1/25;
             x = (((a*t + b)*t) + c)*t + d;
             y = (((e*t + f)*t) + g)*t + h;
 
-            vects.push_back(QPoint(qFloor(x + 0.5), qFloor(y + 0.5)));
+            points.push_back(QPoint(qFloor(x + 0.5), qFloor(y + 0.5)));
+        }
+
+        //  convert series of points to series of vectors
+        std::list<QPoint>::iterator fst = points.begin();
+        std::list<QPoint>::iterator snd = points.begin();
+        snd++;
+        while (snd != points.end()) {
+            vects.push_back((*snd) - (*fst));
+            fst++;
+            snd++;
         }
     }
     return vects;
