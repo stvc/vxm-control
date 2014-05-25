@@ -84,6 +84,12 @@ void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
         m_selectedEntity->setSelected(true);
         m_selectedEntity->selectControlPoint(event->pos());
     }
+    else if (m_mode == Circle) {
+        m_entities.push_back(new CircleEntity(event->pos()));
+        m_selectedEntity = m_entities.back();
+        m_selectedEntity->setSelected(true);
+        m_selectedEntity->selectControlPoint(event->pos());
+    }
 
     update();
 }

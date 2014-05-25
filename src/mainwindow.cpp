@@ -34,7 +34,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // TODO: reenable these after implementation
     ui->actionPolygonTool->setEnabled(false);
-    ui->actionCircleTool->setEnabled(false);
     ui->actionCurveTool->setEnabled(false);
 
 

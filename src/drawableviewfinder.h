@@ -8,6 +8,7 @@
 #include "drawableentity.h"
 #include "rectangleentity.h"
 #include "lineentity.h"
+#include "circleentity.h"
 
 
 class DrawableViewfinder : public QWidget

@@ -9,6 +9,7 @@ SOURCES += src/main.cpp\
         src/customvideosurface.cpp\
         src/rectangleentity.cpp\
         src/lineentity.cpp\
+        src/circleentity.cpp\
         src/pointtranslator.cpp
 
 HEADERS += src/mainwindow.h\
@@ -20,6 +21,7 @@ HEADERS += src/mainwindow.h\
         src/drawableentity.h\
         src/rectangleentity.h\
         src/lineentity.h\
+        src/circleentity.h\
         src/pointtranslator.h
 
 FORMS += src/mainwindow.ui\
