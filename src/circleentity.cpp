@@ -17,7 +17,10 @@ CircleEntity::~CircleEntity() {}
 
 bool CircleEntity::isPointOnEntity(QPoint p) const {
     ControlPoint cp = findControlPoint(p);
-    return (cp == Resize || cp == Center);
+    if (m_selected)
+        return (cp != None);
+    else
+        return (cp == Resize || cp == Center);
 }
 
 Qt::CursorShape CircleEntity::getMouseCursorAtPosition(QPoint p) const {
