@@ -10,6 +10,7 @@ LineEntity::LineEntity(QPoint p) :
     m_selectedControlPoint = None;
     m_outlineStartTime.start();
     m_expectedTime = 0;
+    m_outlined = true;
 }
 
 LineEntity::~LineEntity() {}

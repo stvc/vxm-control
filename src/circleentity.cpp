@@ -9,6 +9,7 @@ CircleEntity::CircleEntity(QPoint p) :
 {
     m_selectedControlPoint = None;
     m_outlineStartTime.start();
+    m_outlined = true;
     m_expectedTime = 0;
     m_radius = 0;
 }
