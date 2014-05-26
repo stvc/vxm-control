@@ -56,6 +56,10 @@ void DrawableViewfinder::keyPressEvent(QKeyEvent* event) {
     else if (event->key() == Qt::Key_Escape && m_selectedEntity != NULL) {
         deselectEntity();
     }
+    else if (event->key() == Qt::Key_Space && m_selectedEntity != NULL) {
+        m_selectedEntity->setOutlined(false);
+        m_selectedEntity->startOutlining(10 * 1000);
+    }
     else {
         QWidget::keyPressEvent(event);
     }
