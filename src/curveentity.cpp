@@ -94,16 +94,59 @@ void CurveEntity::startOutlining(int expected) {
 void CurveEntity::paintEntity(QPainter& p) const {
 
     // TODO: redo this method for progress indicator
-    p.setPen(QPen(Qt::green, 2,
-        Qt::PenStyle(Qt::SolidLine),
-        Qt::PenCapStyle(Qt::FlatCap),
-        Qt::PenJoinStyle(Qt::MiterJoin)));
+    if (m_outlined || m_outlineStartTime.elapsed() > m_expectedTime) {
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
 
-    QPainterPath path;
-    path.moveTo(m_first);
-    path.cubicTo(m_second, m_third, m_forth);
+        QPainterPath path;
+        path.moveTo(m_first);
+        path.cubicTo(m_second, m_third, m_forth);
 
-    p.drawPath(path);
+        p.drawPath(path);
+    }
+    else if (!m_outlined && m_expectedTime == 0) {
+        p.setPen(QPen(Qt::red, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+
+        QPainterPath path;
+        path.moveTo(m_first);
+        path.cubicTo(m_second, m_third, m_forth);
+
+        p.drawPath(path);
+    }
+    else {
+        double t = (double) m_outlineStartTime.elapsed() / m_expectedTime;
+        QPoint p10 = (m_second - m_first) * t + m_first;
+        QPoint p11 = (m_third - m_second) * t + m_second;
+        QPoint p12 = (m_forth - m_third) * t + m_third;
+        QPoint p20 = (p11 - p10) * t + p10;
+        QPoint p21 = (p12 - p11) * t + p11;
+        QPoint p30 = (p21 - p20) * t + p20;
+
+        QPainterPath completed;
+        completed.moveTo(m_first);
+        completed.cubicTo(p10, p20, p30);
+
+        QPainterPath uncompleted;
+        uncompleted.moveTo(p30);
+        uncompleted.cubicTo(p21, p12, m_forth);
+
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawPath(completed);
+
+        p.setPen(QPen(Qt::red, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawPath(uncompleted);
+    }
 
 
     if (m_selected) {
