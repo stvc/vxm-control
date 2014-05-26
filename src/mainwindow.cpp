@@ -32,10 +32,6 @@ MainWindow::MainWindow(QWidget *parent) :
     toolbarActions->addAction(ui->actionCurveTool);
     ui->actionPointerTool->setChecked(true);
 
-    // TODO: reenable these after implementation
-    ui->actionCurveTool->setEnabled(false);
-
-
     // set up dialogs
 
     serialDialog = new SerialConfigDialog(this);

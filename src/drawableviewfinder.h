@@ -2,14 +2,15 @@
 #define DRAWABLEVIEWFINDER_H
 
 #include <list>
-#include <QWidget>
 #include <QMouseEvent>
 #include <QPainter>
-#include "drawableentity.h"
-#include "rectangleentity.h"
-#include "lineentity.h"
+#include <QWidget>
 #include "circleentity.h"
+#include "curveentity.h"
+#include "drawableentity.h"
+#include "lineentity.h"
 #include "polygonentity.h"
+#include "rectangleentity.h"
 
 
 class DrawableViewfinder : public QWidget
