@@ -182,65 +182,6 @@ void PolygonEntity::paintEntity(QPainter& p) const {
         }
         p.setBrush(Qt::NoBrush);
     }
-
-    // TODO: delete this
-    /*
-
-    QRect circ(m_centerPoint.x() - m_radius, m_centerPoint.y() - m_radius, m_radius * 2, m_radius * 2);
-    int startAngle = 90 * 16;
-
-    double percentComplete = 0;
-    if (m_outlined) {
-        percentComplete = 1;
-    }
-    else {
-        int elapsed = m_outlineStartTime.elapsed();
-        if (elapsed < m_expectedTime) {
-            percentComplete = elapsed / m_expectedTime;
-        }
-    }
-
-    int spanAngle = qFloor((-360 * 16 * percentComplete) + 89.5);
-
-
-    p.setPen(QPen(Qt::red, 2,
-        Qt::PenStyle(Qt::SolidLine),
-        Qt::PenCapStyle(Qt::FlatCap),
-        Qt::PenJoinStyle(Qt::MiterJoin)));
-
-    if (percentComplete == 0) {
-        p.drawEllipse(circ);
-    }
-    else if (percentComplete != 1) {
-        p.drawArc(circ, startAngle, spanAngle);
-    }
-
-    p.setPen(QPen(Qt::green, 2,
-        Qt::PenStyle(Qt::SolidLine),
-        Qt::PenCapStyle(Qt::FlatCap),
-        Qt::PenJoinStyle(Qt::MiterJoin)));
-
-    if (percentComplete == 1) {
-        p.drawEllipse(circ);
-    }
-    else if (percentComplete != 0) {
-        p.drawArc(circ, spanAngle, startAngle - 360*16);
-    }
-
-    if (m_selected) {
-        p.setBrush(Qt::white);
-        p.setPen(QPen(Qt::green, 2,
-            Qt::PenStyle(Qt::SolidLine),
-            Qt::PenCapStyle(Qt::FlatCap),
-            Qt::PenJoinStyle(Qt::MiterJoin)));
-        p.drawEllipse(m_centerPoint, 5, 5);
-
-        QPoint delta(2,2);
-        QPoint cp(m_centerPoint.x() + m_radius, m_centerPoint.y());
-        p.drawRect(QRect(cp - delta, cp + delta));
-        p.setBrush(Qt::NoBrush);
-    }
-    */
 }
 
 QPoint PolygonEntity::getStartPoint() const {
