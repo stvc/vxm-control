@@ -31,6 +31,7 @@ private:
         TranslateFirst, TranslateSecond, TranslateThird, TranslateForth };
 
     double calcDistance(QPoint, QPoint) const;
+    double estimateArcLengthOfCurve() const;
     ControlPoint findControlPoint(QPoint) const;
 
     QPoint m_first;

@@ -71,6 +71,7 @@ void CurveEntity::moveControlPointTo(QPoint p) {
         m_second += delta;
         m_third  += delta;
         m_forth  += delta;
+        m_translateReferencePoint = p;
     }
 }
 
@@ -103,6 +104,7 @@ void CurveEntity::paintEntity(QPainter& p) const {
     path.cubicTo(m_second, m_third, m_forth);
 
     p.drawPath(path);
+
 
     if (m_selected) {
         p.setPen(QPen(Qt::gray, 2,
@@ -153,6 +155,32 @@ double CurveEntity::calcDistance(QPoint a, QPoint b) const {
     return qSqrt(qPow(a.x() - b.x(), 2) + qPow(a.y() - b.y(), 2));
 }
 
+double CurveEntity::estimateArcLengthOfCurve() const {
+    double a = m_forth.x() - 3 * m_third.x() + 3 * m_second.x() - m_first.x();
+    double b = 3 * m_third.x() - 6 * m_second.x() + 3 * m_first.x();
+    double c = 3 * m_second.x() - 3 * m_first.x();
+    double d = m_first.x();
+    double e = m_forth.y() - 3 * m_third.y() + 3 * m_second.y() - m_first.y();
+    double f = 3 * m_third.y() - 6 * m_second.y() + 3 * m_first.y();
+    double g = 3 * m_second.y() - 3 * m_first.y();
+    double h = m_first.y();
+
+    QPoint prev = m_first;
+    QPoint curr = m_first;
+    double t;
+    int x,y;
+    double length = 0;;
+    for (int i=0; i<26; i++) {
+        prev = curr;
+        t = (double) i / 25;
+        x = qFloor( (((a*t) + b)*t + c)*t + d + 0.5 );
+        y = qFloor( (((e*t) + f)*t + g)*t + h + 0.5 );
+        curr = QPoint(x,y);
+        length += calcDistance(prev, curr);
+    }
+    return length;
+}
+
 CurveEntity::ControlPoint CurveEntity::findControlPoint(QPoint p) const {
     if (calcDistance(p, m_forth) < 5.0)
         return TranslateForth;
@@ -163,7 +191,27 @@ CurveEntity::ControlPoint CurveEntity::findControlPoint(QPoint p) const {
     if (calcDistance(p, m_third) < 5.0)
         return TranslateThird;
 
-    // TODO: detect for TranslateAll
+    // detect for TranslateAll
+    double a = m_forth.x() - 3 * m_third.x() + 3 * m_second.x() - m_first.x();
+    double b = 3 * m_third.x() - 6 * m_second.x() + 3 * m_first.x();
+    double c = 3 * m_second.x() - 3 * m_first.x();
+    double d = m_first.x();
+    double e = m_forth.y() - 3 * m_third.y() + 3 * m_second.y() - m_first.y();
+    double f = 3 * m_third.y() - 6 * m_second.y() + 3 * m_first.y();
+    double g = 3 * m_second.y() - 3 * m_first.y();
+    double h = m_first.y();
+
+    double t;
+    int x,y;
+    int iterations = qFloor( estimateArcLengthOfCurve() / 3 + 0.5 );
+    for (int i=0; i<iterations; i++) {
+        t = (double) i / iterations;
+        x = qFloor( (((a*t) + b)*t + c)*t + d + 0.5 );
+        y = qFloor( (((e*t) + f)*t + g)*t + h + 0.5 );
+        if (calcDistance(QPoint(x,y), p) < 5.0) {
+            return TranslateAll;
+        }
+    }
 
     return None;
 }
