@@ -1,6 +1,7 @@
 #include "rectangleentity.h"
 #include <QtCore/qmath.h>
 #include <QDebug>
+#include <QVector>
 
 RectangleEntity::RectangleEntity(QPoint p) :
     m_startPoint(p),
@@ -113,95 +114,74 @@ void RectangleEntity::startOutlining(int expected) {
 
 void RectangleEntity::paintEntity(QPainter& p) const {
     int elapsed = m_outlineStartTime.elapsed();
-    std::list<QPoint> points;
-    std::list<QPoint> completedPoints;
-    std::list<QPoint> uncompletedPoints;
-
-    points.push_back(m_startPoint);
-    points.push_back(QPoint(m_endPoint.x(), m_startPoint.y()));
-    points.push_back(m_endPoint);
-    points.push_back(QPoint(m_startPoint.x(), m_endPoint.y()));
-    points.push_back(m_startPoint);
-
-    completedPoints.push_back(m_startPoint);
-    if (elapsed < m_expectedTime) {
-        double percent = elapsed / m_expectedTime;
-        int totalDist = 2 * (m_endPoint.x() - m_startPoint.x()) + 2 * (m_endPoint.y() - m_startPoint.y());
-        int distToDraw = percent * totalDist;
-        int distCompl = 0;
-        std::list<QPoint>::iterator it = points.begin();
-        it++;
-        for (; it != points.end(); it++) {
-            if (distCompl < distToDraw) {
-                double dist = calcDistance(*completedPoints.end(), *it);
-                if ((dist + distCompl) < distToDraw) {
-                    int diff = dist + distCompl - distToDraw;
-                    double percent = diff / dist;
-                    QPoint mid = (*it) - (*completedPoints.end());
-                    mid *= percent;
-                    mid += *completedPoints.end();
-                    completedPoints.push_back(mid);
-                    uncompletedPoints.push_back(mid);
-                }
-                else {
-                    completedPoints.push_back(*it);
-                }
-                distCompl += dist;
-            }
-            else {
-                uncompletedPoints.push_back(*it);
-            }
-        }
-        uncompletedPoints.push_back(m_startPoint);
-    }
-    else {
-        if (!m_outlined) {
-            uncompletedPoints.push_back(QPoint(m_endPoint.x(), m_startPoint.y()));
-            uncompletedPoints.push_back(m_endPoint);
-            uncompletedPoints.push_back(QPoint(m_startPoint.x(), m_endPoint.y()));
-            uncompletedPoints.push_back(m_startPoint);
-        }
-        else {
-            completedPoints.push_back(QPoint(m_endPoint.x(), m_startPoint.y()));
-            completedPoints.push_back(m_endPoint);
-            completedPoints.push_back(QPoint(m_startPoint.x(), m_endPoint.y()));
-            completedPoints.push_back(m_startPoint);
-        }
-    }
-    uncompletedPoints.push_back(m_startPoint);
-
-    // draw completed points
-    if (completedPoints.size() >= 2) {
+    if (m_outlined || elapsed > m_expectedTime) {
         p.setPen(QPen(Qt::green, 2,
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
             Qt::PenJoinStyle(Qt::MiterJoin)));
-
-        std::list<QPoint>::iterator current = completedPoints.begin();
-        std::list<QPoint>::iterator previous = completedPoints.begin();
-        current++;
-        while (current != completedPoints.end()) {
-            p.drawLine(*previous, *current);
-            previous = current;
-            current++;
-        }
+        p.drawRect(QRect(m_startPoint, m_endPoint));
     }
-
-    // draw uncompleted points
-    if (uncompletedPoints.size() >= 2) {
+    else if (!m_outlined && m_expectedTime == 0) {
         p.setPen(QPen(Qt::red, 2,
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
             Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawRect(QRect(m_startPoint, m_endPoint));
+    }
+    else {
+        double percentCompleted = (double) elapsed / m_expectedTime;
+        int perimeterOfRect = 2 * (m_endPoint.x() - m_startPoint.x()) + 2 * (m_endPoint.y() - m_startPoint.y());
+        if (perimeterOfRect < 0)
+            perimeterOfRect *= -1;
+        int perimeterCompleted = qFloor(perimeterOfRect * percentCompleted + 0.5);
 
-        std::list<QPoint>::iterator current = uncompletedPoints.begin();
-        std::list<QPoint>::iterator previous = completedPoints.begin();
-        current++;
-        while (current != uncompletedPoints.end()) {
-            p.drawLine(*previous, *current);
-            previous = current;
-            current++;
+        QVector<QPoint> completed;
+        QVector<QPoint> uncompleted;
+
+        QPoint points[5];
+        points[0] = m_startPoint;
+        points[1] = QPoint(m_endPoint.x(), m_startPoint.y());
+        points[2] = m_endPoint;
+        points[3] = QPoint(m_startPoint.x(), m_endPoint.y());
+        points[4] = m_startPoint;
+
+        double completedLength = 0;
+        for (int i=1; i<5; i++) {
+            if (perimeterCompleted > 0) {
+                completed.push_back(points[i-1]);
+                double l = calcDistance(points[i-1], points[i]);
+                if (l < perimeterCompleted) {
+                    // draw completed line
+                    perimeterCompleted -= l;
+                    completed.push_back(points[i]);
+                }
+                else {
+                    // subdivide line
+                    double factor = perimeterCompleted / l;
+                    perimeterCompleted = 0;
+                    QPoint midPoint = (points[i] - points[i-1]) * factor + points[i-1];
+                    completed.push_back(midPoint);
+                    uncompleted.push_back(midPoint);
+                    uncompleted.push_back(points[i]);
+                }
+            }
+            else {
+                uncompleted.push_back(points[i-1]);
+                uncompleted.push_back(points[i]);
+            }
         }
+
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawLines(completed);
+
+        p.setPen(QPen(Qt::red, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawLines(uncompleted);
     }
 
     if (m_selected) {

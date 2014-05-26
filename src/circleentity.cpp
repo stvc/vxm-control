@@ -63,44 +63,37 @@ void CircleEntity::startOutlining(int expected) {
 void CircleEntity::paintEntity(QPainter& p) const {
 
     QRect circ(m_centerPoint.x() - m_radius, m_centerPoint.y() - m_radius, m_radius * 2, m_radius * 2);
-    int startAngle = 90 * 16;
 
-    double percentComplete = 0;
-    if (m_outlined) {
-        percentComplete = 1;
+    if (m_outlined || m_outlineStartTime.elapsed() > m_expectedTime) {
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawEllipse(circ);
+    }
+    else if (!m_outlined && m_expectedTime == 0) {
+        p.setPen(QPen(Qt::red, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawEllipse(circ);
     }
     else {
-        int elapsed = m_outlineStartTime.elapsed();
-        if (elapsed < m_expectedTime) {
-            percentComplete = elapsed / m_expectedTime;
-        }
-    }
+        double percentComplete = (double) m_outlineStartTime.elapsed() / m_expectedTime;
+        double percentUncompleted = 1.0 - percentComplete;
+        int completedAngle = qFloor((double) -360 * 16 * percentComplete + 0.5);
+        int uncompletedAngle = qFloor((double) -360 * 16 * percentUncompleted + 0.5);
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawArc(circ, 90 * 16, completedAngle);
 
-    int spanAngle = qFloor((-360 * 16 * percentComplete) + 90.5);
-
-
-    p.setPen(QPen(Qt::red, 2,
-        Qt::PenStyle(Qt::SolidLine),
-        Qt::PenCapStyle(Qt::FlatCap),
-        Qt::PenJoinStyle(Qt::MiterJoin)));
-
-    if (percentComplete == 0) {
-        p.drawEllipse(circ);
-    }
-    else if (percentComplete != 1) {
-        p.drawArc(circ, startAngle, spanAngle);
-    }
-
-    p.setPen(QPen(Qt::green, 2,
-        Qt::PenStyle(Qt::SolidLine),
-        Qt::PenCapStyle(Qt::FlatCap),
-        Qt::PenJoinStyle(Qt::MiterJoin)));
-
-    if (percentComplete == 1) {
-        p.drawEllipse(circ);
-    }
-    else if (percentComplete != 0) {
-        p.drawArc(circ, spanAngle, startAngle - 360*16);
+        p.setPen(QPen(Qt::red, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawArc(circ, completedAngle + (90 * 16), (-360*16) - completedAngle);
     }
 
     if (m_selected) {

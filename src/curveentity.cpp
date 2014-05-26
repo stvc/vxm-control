@@ -93,8 +93,8 @@ void CurveEntity::startOutlining(int expected) {
 
 void CurveEntity::paintEntity(QPainter& p) const {
 
-    // TODO: redo this method for progress indicator
     if (m_outlined || m_outlineStartTime.elapsed() > m_expectedTime) {
+        // draw shape normally as green
         p.setPen(QPen(Qt::green, 2,
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
@@ -107,6 +107,7 @@ void CurveEntity::paintEntity(QPainter& p) const {
         p.drawPath(path);
     }
     else if (!m_outlined && m_expectedTime == 0) {
+        // draw shape normally as red
         p.setPen(QPen(Qt::red, 2,
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
@@ -119,6 +120,8 @@ void CurveEntity::paintEntity(QPainter& p) const {
         p.drawPath(path);
     }
     else {
+        // determine how much of shape is completed, divide curve into two
+        // parts, draw the completed part green and the rest red
         double t = (double) m_outlineStartTime.elapsed() / m_expectedTime;
         QPoint p10 = (m_second - m_first) * t + m_first;
         QPoint p11 = (m_third - m_second) * t + m_second;

@@ -58,32 +58,38 @@ void LineEntity::startOutlining(int expected) {
 }
 
 void LineEntity::paintEntity(QPainter& p) const {
-    QPoint completed = m_endPoint - m_startPoint; // use absolute point
-    int elapsed = m_outlineStartTime.elapsed();
-    if (elapsed < m_expectedTime) {
-        double percent = elapsed / m_expectedTime;
-        completed *= percent;
+    if (m_outlined || m_outlineStartTime.elapsed() > m_expectedTime) {
+        // draw normally green
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawLine(m_startPoint, m_endPoint);
     }
-    else if (!m_outlined) {
-        completed = QPoint(0,0);
-    }
-
-    completed += m_startPoint;
-
-    // draw line completed as green
-    p.setPen(QPen(Qt::green, 2,
-        Qt::PenStyle(Qt::SolidLine),
-        Qt::PenCapStyle(Qt::FlatCap),
-        Qt::PenJoinStyle(Qt::MiterJoin)));
-    p.drawLine(m_startPoint, completed);
-
-    if (completed != m_endPoint) {
-        // draw remaining distance as red
+    else if (!m_outlined && m_expectedTime == 0) {
+        // draw normally red
         p.setPen(QPen(Qt::red, 2,
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
             Qt::PenJoinStyle(Qt::MiterJoin)));
-        p.drawLine(completed, m_endPoint);
+        p.drawLine(m_startPoint, m_endPoint);
+    }
+    else {
+        double percentCompleted = (double) m_outlineStartTime.elapsed() / m_expectedTime;
+        QPoint delta = (m_endPoint - m_startPoint) * percentCompleted;
+        delta += m_startPoint;
+
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawLine(m_startPoint, delta);
+
+        p.setPen(QPen(Qt::red, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+        p.drawLine(delta, m_endPoint);
     }
 
     if (m_selected) {

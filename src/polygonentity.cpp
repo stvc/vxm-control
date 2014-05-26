@@ -2,6 +2,7 @@
 #include <QtCore/qmath.h>
 #include <QDebug>
 #include <QRect>
+#include <QVector>
 
 PolygonEntity::PolygonEntity(QPoint p) :
     m_translateReferencePoint(0,0)
@@ -156,26 +157,111 @@ void PolygonEntity::startOutlining(int expected) {
 
 void PolygonEntity::paintEntity(QPainter& p) const {
 
-    // TODO: redo this method for progress indicator
-    p.setPen(QPen(Qt::green, 2,
-        Qt::PenStyle(Qt::SolidLine),
-        Qt::PenCapStyle(Qt::FlatCap),
-        Qt::PenJoinStyle(Qt::MiterJoin)));
+    if (m_outlined || m_outlineStartTime.elapsed() > m_expectedTime) {
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
 
-    if (m_points.size() > 1) {
-        std::list<QPoint>::const_iterator fst = m_points.begin();
-        std::list<QPoint>::const_iterator snd = m_points.begin();
-        snd++;
-
-        while (snd != m_points.end()) {
-            p.drawLine(*fst, *snd);
-            fst++;
+        if (m_points.size() > 1) {
+            std::list<QPoint>::const_iterator fst = m_points.begin();
+            std::list<QPoint>::const_iterator snd = m_points.begin();
             snd++;
+
+            while (snd != m_points.end()) {
+                p.drawLine(*fst, *snd);
+                fst++;
+                snd++;
+            }
+        }
+    }
+    else if (!m_outlined && m_expectedTime == 0) {
+        p.setPen(QPen(Qt::red, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
+
+        if (m_points.size() > 1) {
+            std::list<QPoint>::const_iterator fst = m_points.begin();
+            std::list<QPoint>::const_iterator snd = m_points.begin();
+            snd++;
+
+            while (snd != m_points.end()) {
+                p.drawLine(*fst, *snd);
+                fst++;
+                snd++;
+            }
+        }
+    }
+    else {
+        QVector<QPoint> completed;
+        QVector<QPoint> uncompleted;
+
+        if (m_points.size() > 1) {
+            std::list<QPoint>::const_iterator fst = m_points.begin();
+            std::list<QPoint>::const_iterator snd = m_points.begin();
+            snd++;
+
+            // calculate the length of entire polygon
+            double totalPerimeter = 0;
+            while (snd != m_points.end()) {
+                totalPerimeter += calcDistance(*fst, *snd);
+                fst++;
+                snd++;
+            }
+
+            double completedPerimeter = totalPerimeter * m_outlineStartTime.elapsed() / m_expectedTime;
+            fst = m_points.begin();
+            snd = m_points.begin();
+            snd++;
+
+            while (snd != m_points.end()) {
+                if (completedPerimeter > 0) {
+                    double len = calcDistance(*fst, *snd);
+                    completed.push_back(*fst);
+                    if (len < completedPerimeter) {
+                        completedPerimeter -= len;
+                        completed.push_back(*snd);
+                    }
+                    else {
+                        double factor = completedPerimeter / len;
+                        completedPerimeter = 0;
+                        QPoint midPoint = ((*snd - *fst) * factor) + (*fst);
+                        completed.push_back(midPoint);
+                        uncompleted.push_back(midPoint);
+                        uncompleted.push_back(*snd);
+                    }
+                }
+                else {
+                    uncompleted.push_back(*fst);
+                    uncompleted.push_back(*snd);
+                }
+
+                fst++;
+                snd++;
+            }
+
+            p.setPen(QPen(Qt::green, 2,
+                Qt::PenStyle(Qt::SolidLine),
+                Qt::PenCapStyle(Qt::FlatCap),
+                Qt::PenJoinStyle(Qt::MiterJoin)));
+            p.drawLines(completed);
+
+            p.setPen(QPen(Qt::red, 2,
+                Qt::PenStyle(Qt::SolidLine),
+                Qt::PenCapStyle(Qt::FlatCap),
+                Qt::PenJoinStyle(Qt::MiterJoin)));
+            p.drawLines(uncompleted);
         }
     }
 
     if (m_selected) {
+        p.setPen(QPen(Qt::green, 2,
+            Qt::PenStyle(Qt::SolidLine),
+            Qt::PenCapStyle(Qt::FlatCap),
+            Qt::PenJoinStyle(Qt::MiterJoin)));
         p.setBrush(Qt::white);
+
         QPoint border(2,2);
         for (std::list<QPoint>::const_iterator it = m_points.begin(); it != m_points.end(); it++) {
             p.drawEllipse(*it, 5, 5);
