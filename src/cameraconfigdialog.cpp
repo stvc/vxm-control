@@ -5,10 +5,10 @@
 CameraConfigDialog::CameraConfigDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::CameraConfigDialog),
-    device("")
+    m_device("")
 {
     ui->setupUi(this);
-    mirror = false;
+    m_mirror = false;
 }
 
 CameraConfigDialog::~CameraConfigDialog()
@@ -28,19 +28,19 @@ int CameraConfigDialog::exec() {
 }
 
 QByteArray CameraConfigDialog::getDevice() {
-    return device;
+    return m_device;
 }
 
 bool CameraConfigDialog::getMirror() {
-    return mirror;
+    return m_mirror;
 }
 
 void CameraConfigDialog::on_buttonBox_accepted() {
-    device.clear();
-    device.append(this->ui->cbCameraDevices->currentText());
+    m_device.clear();
+    m_device.append(this->ui->cbCameraDevices->currentText());
 
     if (this->ui->checkMirror->isChecked())
-        mirror = true;
+        m_mirror = true;
     else
-        mirror = false;
+        m_mirror = false;
 }

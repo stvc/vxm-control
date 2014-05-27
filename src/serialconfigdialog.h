@@ -33,8 +33,8 @@ private:
 
 private:
     Ui::SerialConfigDialog *ui;
-    bool hasBeenConfigured;
-    VXMController::SerialSettings currentSettings;
+    bool m_hasBeenConfigured;
+    VXMController::SerialSettings m_currentSettings;
 };
 
 #endif // SERIALCONFIGDIALOG_H

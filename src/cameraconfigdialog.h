@@ -25,8 +25,8 @@ private slots:
 
 private:
     Ui::CameraConfigDialog *ui;
-    QByteArray device;
-    bool mirror;
+    QByteArray m_device;
+    bool m_mirror;
 };
 
 #endif // CAMERACONFIGDIALOG_H
