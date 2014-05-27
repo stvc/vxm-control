@@ -53,11 +53,12 @@ private slots:
 
     void drawing_updated();
     void entity_added();
+    void viewfinder_point_clicked();
     void calibration_step_updated();
     void toolbar_action_triggered(QAction*);
 
 signals:
-    void calibrationStepChanged();
+    void updateCalibrationStep();
 
 protected:
     void resizeEvent(QResizeEvent *);
@@ -83,16 +84,11 @@ private:
 
     QPoint crossHairs;
 
-/*
-    QPoint shapeStart;
-    QPoint shapeEnd;
-    bool shapeDrawn;
-*/
-
-    bool inCalibrationMode;
-    int calibrationStep;
-    double tmpXStepsPerFOV;
-    double tmpYStepsPerFOV;
+    // stuff for calibrating controller
+    int    m_calibrationStep;
+    QPoint m_tmpPoint;
+    double m_tmpXStepsPerFOV;
+    double m_tmpYStepsPerFOV;
 
     PointTranslator m_translator;
     bool m_entitiesQueuedForDrawing;

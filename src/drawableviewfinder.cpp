@@ -12,6 +12,9 @@ DrawableViewfinder::DrawableViewfinder(QWidget *parent) :
     this->m_freezeFrame = false;
 
     setFocusPolicy(Qt::StrongFocus);
+
+    // this is for changing the mouse cursor when mousing over control points
+    // of currently selected entity (currently disabled)
 //    setMouseTracking(true);
 }
 
@@ -41,7 +44,7 @@ void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
                 Qt::PenJoinStyle(Qt::MiterJoin)));
     painter.setBackground(Qt::NoBrush);
 
-    if (!m_entities.empty()) {
+    if (!m_entities.empty() && m_mode != CalibrationMode) {
         for (std::list<DrawableEntity*>::iterator it=m_entities.begin(); it != m_entities.end(); ++it) {
             DrawableEntity* tmp = *it;
             tmp->paintEntity(painter);
@@ -57,6 +60,7 @@ void DrawableViewfinder::keyPressEvent(QKeyEvent* event) {
         deselectEntity();
     }
     else if (event->key() == Qt::Key_Space && m_selectedEntity != NULL) {
+        // TODO: only for testing progress indicator, remove for release
         m_selectedEntity->setOutlined(false);
         m_selectedEntity->startOutlining(10 * 1000);
     }
@@ -114,7 +118,11 @@ void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
 }
 
 void DrawableViewfinder::mouseReleaseEvent(QMouseEvent* event) {
-    if (m_selectedEntity != NULL) {
+    if (m_mode == CalibrationMode) {
+        m_clickPosition = event->pos();
+        emit pointClicked();
+    }
+    else if (m_selectedEntity != NULL) {
         // reset m_selectedEntity's control point if necessary
         m_selectedEntity->deselectControlPoint();
 
@@ -201,6 +209,10 @@ void DrawableViewfinder::removeSelectedEntity() {
         m_entities.remove(m_selectedEntity);
         m_selectedEntity = NULL;
     }
+}
+
+QPoint DrawableViewfinder::getClickPosition() {
+    return m_clickPosition;
 }
 
 std::list<DrawableEntity*> *DrawableViewfinder::getListOfEntities() {

@@ -63,8 +63,9 @@ MainWindow::MainWindow(QWidget *parent) :
     l->addWidget(shapeDrawer);
     ui->displayFrame->setLayout(l);
 
-    inCalibrationMode = false;
-    calibrationStep = 0;
+    m_calibrationStep = 0;
+    m_tmpXStepsPerFOV = 1;
+    m_tmpYStepsPerFOV = 1;
 
     m_entitiesQueuedForDrawing = false;
     crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
@@ -81,10 +82,11 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(shapeDrawer, SIGNAL(entityChanged()), this, SLOT(drawing_updated()));
     connect(shapeDrawer, SIGNAL(entityAdded()), this, SLOT(entity_added()));
+    connect(shapeDrawer, SIGNAL(pointClicked()), this, SLOT(viewfinder_point_clicked()));
 
     connect(toolbarActions, SIGNAL(triggered(QAction*)), this, SLOT(toolbar_action_triggered(QAction*)));
 
-    connect(this, SIGNAL(calibrationStepChanged()), this, SLOT(calibration_step_updated()));
+    connect(this, SIGNAL(updateCalibrationStep()), this, SLOT(calibration_step_updated()));
 
     // temporary while I create the calibration routine
 //    ui->btnCalibrate->setEnabled(true);
@@ -135,26 +137,18 @@ void MainWindow::on_btnConnect_clicked() {
 }
 
 void MainWindow::on_btnCalibrate_clicked() {
-    // TODO: rework calibration routine for new Shape system
-    /*
     if (ui->btnCalibrate->text() == "Cancel") {
         ui->stackedWidget->setCurrentWidget(ui->pageMove);
         ui->btnCalibrate->setText("Calibrate");
-        shapeDrawer->resetPoints();
-        inCalibrationMode = false;
-        calibrationStep = 0;
-        emit calibrationStepChanged();
+        shapeDrawer->setEntity(DrawableViewfinder::Pointer);
+        m_calibrationStep = 0;
         ui->btnGrpDrawType->buttonClicked(ui->btnGrpDrawType->checkedId());
     }
     else {
-        ui->stackedWidget->setCurrentWidget(ui->pageCalibrate);
-        ui->btnCalibrate->setText("Cancel");
-        shapeDrawer->setShape(DrawableViewfinder::StartPoint);
-        inCalibrationMode = true;
-        calibrationStep = 0;
-        emit calibrationStepChanged();
+        ui->actionPointerTool->trigger();
+        m_calibrationStep = 0;
+        emit updateCalibrationStep();
     }
-    */
 }
 
 void MainWindow::on_btnGrpDrawType_buttonClicked(int id) {
@@ -208,32 +202,15 @@ void MainWindow::on_btnMove_clicked() {
 }
 
 void MainWindow::on_btnCalMoveX_clicked() {
-    ui->btnCalMoveX->setEnabled(false);
-    ui->spinBoxCalXSteps->setEnabled(false);
-    controller->move(QPoint(ui->spinBoxCalXSteps->value(),0));
+    emit updateCalibrationStep();
 }
 
 void MainWindow::on_btnCalMoveY_clicked() {
-    ui->btnCalMoveY->setEnabled(false);
-    ui->spinBoxCalYSteps->setEnabled(false);
-    controller->move(QPoint(0,ui->spinBoxCalYSteps->value()));
+    emit updateCalibrationStep();
 }
 
 void MainWindow::on_btnCalSave_clicked() {
-
-    if (tmpXStepsPerFOV < 0)
-        tmpXStepsPerFOV *= -1;
-    if (tmpYStepsPerFOV < 0)
-        tmpYStepsPerFOV *= -1;
-
-    appSettings.setValue("calibration/widthInSteps", tmpXStepsPerFOV);
-    appSettings.setValue("calibration/heightInSteps", tmpYStepsPerFOV);
-
-    // crossHairs = shapeDrawer->getEndPoint();
-    crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
-
-    // reset ui
-    ui->btnCalibrate->click();
+    emit updateCalibrationStep();
 }
 
 void MainWindow::controller_connected() {
@@ -248,7 +225,10 @@ void MainWindow::controller_disconnected() {
 }
 
 void MainWindow::controller_ready() {
-    if (m_entitiesQueuedForDrawing) {
+    if (m_calibrationStep > 0) {
+        emit updateCalibrationStep();
+    }
+    else if (m_entitiesQueuedForDrawing) {
         (*m_currentEntity)->setOutlined(true);
         m_currentEntity++;
         if (m_currentEntity != m_entitiesToDraw->end()) {
@@ -282,6 +262,10 @@ void MainWindow::entity_added() {
     ui->actionPointerTool->trigger();
 }
 
+void MainWindow::viewfinder_point_clicked() {
+    emit updateCalibrationStep();
+}
+
 void MainWindow::toolbar_action_triggered(QAction *qa) {
     QString data = qa->data().toString();
 
@@ -311,84 +295,102 @@ void MainWindow::toolbar_action_triggered(QAction *qa) {
 }
 
 void MainWindow::calibration_step_updated() {
-    // TODO: rework calibration routine for new Shape system
-    /*
-    double sections = 1;
-    switch (calibrationStep) {
-        case 0:
-            // Instruction1: Set point
-            // disable all but the first step and set drawer's shape
-            ui->labelInstruction1->setEnabled(true);
-            ui->labelInstruction2->setEnabled(false);
-            ui->labelInstruction3->setEnabled(false);
-            ui->labelInstruction4->setEnabled(false);
-            ui->labelInstruction5->setEnabled(false);
-            ui->labelInstruction6->setEnabled(false);
-            ui->spinBoxCalXSteps->setEnabled(false);
-            ui->spinBoxCalYSteps->setEnabled(false);
-            ui->btnCalMoveX->setEnabled(false);
-            ui->btnCalMoveY->setEnabled(false);
-            ui->btnCalSave->setEnabled(false);
-            shapeDrawer->setShape(DrawableViewfinder::StartPoint);
-            break;
-        case 1:
-            // Instruction2: Move in X direction
-            ui->labelInstruction1->setEnabled(false);
-            ui->labelInstruction2->setEnabled(true);
-            ui->btnCalMoveX->setEnabled(true);
-            ui->spinBoxCalXSteps->setEnabled(true);
-            shapeDrawer->freezePoints(true);
-            break;
-        case 2:
-            // Instruction3: Mark new Point
-            ui->labelInstruction2->setEnabled(false);
-            ui->btnCalMoveX->setEnabled(false);
-            ui->spinBoxCalXSteps->setEnabled(false);
-            ui->labelInstruction3->setEnabled(true);
-            shapeDrawer->setShape(DrawableViewfinder::EndPoint);
-            shapeDrawer->freezePoints(false);
-            break;
-        case 3:
-            sections = shapeDrawer->width() / (shapeDrawer->getEndPoint().x() - shapeDrawer->getStartPoint().x());
-            tmpXStepsPerFOV = ui->spinBoxCalXSteps->value() * sections;
-            // Instruction4: Move in Y direction
-            ui->labelInstruction3->setEnabled(false);
-            ui->labelInstruction4->setEnabled(true);
-            ui->btnCalMoveY->setEnabled(true);
-            ui->spinBoxCalYSteps->setEnabled(true);
-            shapeDrawer->setShape(DrawableViewfinder::EndPoint);
-            shapeDrawer->setStartPoint(shapeDrawer->getEndPoint());
-            shapeDrawer->freezePoints(true);
-            break;
-        case 4:
-            // Instruction5: Mark new location
-            ui->labelInstruction4->setEnabled(false);
-            ui->btnCalMoveY->setEnabled(false);
-            ui->spinBoxCalYSteps->setEnabled(false);
-            ui->labelInstruction5->setEnabled(true);
-            shapeDrawer->setShape(DrawableViewfinder::EndPoint);
-            shapeDrawer->freezePoints(false);
-            break;
-        case 5:
-            sections = shapeDrawer->height() / (shapeDrawer->getEndPoint().y() - shapeDrawer->getStartPoint().y());
-            tmpYStepsPerFOV = ui->spinBoxCalYSteps->value() * sections;
-            // Instruction6: Mark crosshairs
-            ui->labelInstruction5->setEnabled(false);
-            ui->labelInstruction6->setEnabled(true);
-            shapeDrawer->resetPoints();
-            shapeDrawer->setShape(DrawableViewfinder::SinglePoint);
-            break;
-        case 6:
-            // save calibration
-            ui->labelInstruction6->setEnabled(false);
-            ui->btnCalSave->setEnabled(true);
-            break;
-        default:
-            calibrationStep = 0;
-            emit calibrationStepChanged();
+    m_calibrationStep++;
+    if (m_calibrationStep == 1) {
+        // Instruction1: Set point
+        // disable all but the first step and set drawer's shape
+        ui->stackedWidget->setCurrentWidget(ui->pageCalibrate);
+        ui->labelInstruction1->setEnabled(true);
+        ui->labelInstruction2->setEnabled(false);
+        ui->labelInstruction3->setEnabled(false);
+        ui->labelInstruction4->setEnabled(false);
+        ui->labelInstruction5->setEnabled(false);
+        ui->labelInstruction6->setEnabled(false);
+        ui->spinBoxCalXSteps->setEnabled(false);
+        ui->spinBoxCalYSteps->setEnabled(false);
+        ui->btnCalMoveX->setEnabled(false);
+        ui->btnCalMoveY->setEnabled(false);
+        ui->btnCalSave->setEnabled(false);
+        shapeDrawer->setEntity(DrawableViewfinder::CalibrationMode);
     }
+    else if (m_calibrationStep == 2) {
+        m_tmpPoint = shapeDrawer->getClickPosition();
+        // Instruction2: Move in X direction
+        ui->labelInstruction1->setEnabled(false);
+        ui->labelInstruction2->setEnabled(true);
+        ui->btnCalMoveX->setEnabled(true);
+        ui->spinBoxCalXSteps->setEnabled(true);
+    }
+    else if (m_calibrationStep == 3) {
+        // Instruction2, part 2: Tell controller to move
+        controller->move(QPoint(ui->spinBoxCalXSteps->value(),0)); // use a 1:1 move ratio
+    }
+    else if (m_calibrationStep == 4) {
+        // controller is ready, ask for new point
+        // Instruction3: Mark new Point
+        ui->labelInstruction2->setEnabled(false);
+        ui->btnCalMoveX->setEnabled(false);
+        ui->spinBoxCalXSteps->setEnabled(false);
+        ui->labelInstruction3->setEnabled(true);
+    }
+    else if (m_calibrationStep == 5) {
+        // TODO: calculate axis skew
+        QPoint newPoint = shapeDrawer->getClickPosition();
+        double numSections = (double) shapeDrawer->width() / (newPoint.x() - m_tmpPoint.x());
+        m_tmpXStepsPerFOV = (double) ui->spinBoxCalXSteps->value() * numSections;
+        m_tmpPoint = newPoint;
 
-    */
+        // Instruction4: Move in Y direction
+        ui->labelInstruction3->setEnabled(false);
+        ui->labelInstruction4->setEnabled(true);
+        ui->btnCalMoveY->setEnabled(true);
+        ui->spinBoxCalYSteps->setEnabled(true);
+    }
+    else if (m_calibrationStep == 6) {
+        // Instruction4, part2: tell controller to move and wait for ready
+        // signal
+        controller->move(QPoint(0,ui->spinBoxCalYSteps->value()));
+    }
+    else if (m_calibrationStep == 7) {
+        // controller is ready, ask for new point
+        // Instruction5: Mark new location
+        ui->labelInstruction4->setEnabled(false);
+        ui->btnCalMoveY->setEnabled(false);
+        ui->spinBoxCalYSteps->setEnabled(false);
+        ui->labelInstruction5->setEnabled(true);
+    }
+    else if (m_calibrationStep == 8) {
+        // new point clicked, calculate difference and number of steps per
+        // field of view, then ask user to click crosshairs
+        // TODO: calculate axis skew
+        QPoint newPoint = shapeDrawer->getClickPosition();
+        double numSections = (double) shapeDrawer->height() / (newPoint.y() - m_tmpPoint.y());
+        m_tmpYStepsPerFOV = (double) ui->spinBoxCalYSteps->value() * numSections;
+        // Instruction6: Mark crosshairs
+        ui->labelInstruction5->setEnabled(false);
+        ui->labelInstruction6->setEnabled(true);
+    }
+    else if (m_calibrationStep == 9) {
+        // crosshairs clicked, ask user to save
+        // TODO: crosshairs is just assumed to be in middle of screen, fix this
+        // if necessary
+        ui->labelInstruction6->setEnabled(false);
+        ui->btnCalSave->setEnabled(true);
+    }
+    else if (m_calibrationStep == 10) {
+        // save button clicked. save correct values to file and reset
+        // calibration mode
+        if (m_tmpXStepsPerFOV < 0)
+            m_tmpXStepsPerFOV *= -1;
+        if (m_tmpYStepsPerFOV < 0)
+            m_tmpYStepsPerFOV *= -1;
+
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+        settings.setValue("calibration/widthInSteps", qFloor(m_tmpXStepsPerFOV + 0.5));
+        settings.setValue("calibration/heightInSteps", qFloor(m_tmpYStepsPerFOV + 0.5));
+
+        ui->btnCalibrate->click();
+    }
 }
 
 void MainWindow::resizeEvent(QResizeEvent* event) {
@@ -400,7 +402,8 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
 
     crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
 
-    if (inCalibrationMode) {
+    if (m_calibrationStep > 0) {
+        // if resizing the window while in calibration mode, cancel calibration
         ui->btnCalibrate->click();
     }
 }

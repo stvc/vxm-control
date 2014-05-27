@@ -18,8 +18,7 @@ class DrawableViewfinder : public QWidget
     Q_OBJECT
 
 public:
-    enum Shape { None, SinglePoint, StartPoint, EndPoint /*, Line, Rectangle */ };
-    enum Entity { Pointer, Line, Rectangle, Polygon, Circle, Curve };
+    enum Entity { Pointer, CalibrationMode, Line, Rectangle, Polygon, Circle, Curve };
 
     DrawableViewfinder(QWidget *parent = 0);
     ~DrawableViewfinder();
@@ -38,6 +37,7 @@ public:
     void deselectEntity();
     void removeSelectedEntity();
 
+    QPoint getClickPosition();
     std::list<DrawableEntity*> *getListOfEntities(); // this is a bit sloppy isn't it?
 
     void setImage(QImage);
@@ -49,6 +49,7 @@ protected:
 signals:
     void entityChanged();
     void entityAdded();
+    void pointClicked();
 
 private:
     QImage* frame;
@@ -56,6 +57,7 @@ private:
     Entity m_mode;
     DrawableEntity* m_selectedEntity;
     std::list<DrawableEntity*> m_entities;
+
     QPoint m_clickPosition;
 
     bool m_freezeFrame;
