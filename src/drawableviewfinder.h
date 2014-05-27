@@ -24,6 +24,7 @@ public:
     ~DrawableViewfinder();
 
     void keyPressEvent(QKeyEvent*);
+    void keyReleaseEvent(QKeyEvent*);
     void mousePressEvent(QMouseEvent*);
     void mouseReleaseEvent(QMouseEvent*);
     void mouseMoveEvent(QMouseEvent*);

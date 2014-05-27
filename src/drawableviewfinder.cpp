@@ -64,8 +64,17 @@ void DrawableViewfinder::keyPressEvent(QKeyEvent* event) {
         m_selectedEntity->setOutlined(false);
         m_selectedEntity->startOutlining(10 * 1000);
     }
+    else if (event->key() == Qt::Key_Shift && m_selectedEntity != NULL) {
+        m_selectedEntity->setShiftKeyState(true);
+    }
     else {
         QWidget::keyPressEvent(event);
+    }
+}
+
+void DrawableViewfinder::keyReleaseEvent(QKeyEvent* event) {
+    if (event->key() == Qt::Key_Shift && m_selectedEntity != NULL) {
+        m_selectedEntity->setShiftKeyState(false);
     }
 }
 void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {

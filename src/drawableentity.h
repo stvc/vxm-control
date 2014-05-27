@@ -15,11 +15,12 @@
 class DrawableEntity
 {
 public:
-    DrawableEntity() : CONTROL_POINT_RADIUS(2) { m_selected = false; };
+    DrawableEntity() : CONTROL_POINT_RADIUS(2) { m_selected = false; m_shiftKeyState = false; };
     virtual ~DrawableEntity() {};
 
     virtual void setSelected(bool s) { m_selected = s; };
     virtual bool isSelected() const { return m_selected; };
+    virtual void setShiftKeyState(bool s) { m_shiftKeyState = s; };
     virtual bool isPointOnEntity(QPoint) const = 0;
 
     virtual Qt::CursorShape getMouseCursorAtPosition(QPoint) const = 0;
@@ -38,6 +39,7 @@ public:
 protected:
     int const CONTROL_POINT_RADIUS;
     bool m_selected;
+    bool m_shiftKeyState;
 };
 
 
