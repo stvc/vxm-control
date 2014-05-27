@@ -262,9 +262,8 @@ void PolygonEntity::paintEntity(QPainter& p) const {
             Qt::PenJoinStyle(Qt::MiterJoin)));
         p.setBrush(Qt::white);
 
-        QPoint border(2,2);
         for (std::list<QPoint>::const_iterator it = m_points.begin(); it != m_points.end(); it++) {
-            p.drawEllipse(*it, 5, 5);
+            p.drawEllipse(*it, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
         }
         p.setBrush(Qt::NoBrush);
     }

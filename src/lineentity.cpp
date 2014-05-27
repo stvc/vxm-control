@@ -99,8 +99,8 @@ void LineEntity::paintEntity(QPainter& p) const {
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
             Qt::PenJoinStyle(Qt::MiterJoin)));
-        p.drawEllipse(m_startPoint, 5, 5);
-        p.drawEllipse(m_endPoint, 5, 5);
+        p.drawEllipse(m_startPoint, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        p.drawEllipse(m_endPoint, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
         p.setBrush(Qt::NoBrush);
     }
 }

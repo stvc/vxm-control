@@ -167,10 +167,10 @@ void CurveEntity::paintEntity(QPainter& p) const {
             Qt::PenJoinStyle(Qt::MiterJoin)));
         p.setBrush(Qt::white);
 
-        p.drawEllipse(m_first, 5, 5);
-        p.drawEllipse(m_second, 5, 5);
-        p.drawEllipse(m_third, 5, 5);
-        p.drawEllipse(m_forth, 5, 5);
+        p.drawEllipse(m_first, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        p.drawEllipse(m_second, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        p.drawEllipse(m_third, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        p.drawEllipse(m_forth, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
 
         p.setBrush(Qt::NoBrush);
     }

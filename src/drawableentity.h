@@ -14,9 +14,8 @@
  */
 class DrawableEntity
 {
-
 public:
-    DrawableEntity() { m_selected = false; };
+    DrawableEntity() : CONTROL_POINT_RADIUS(2) { m_selected = false; };
     virtual ~DrawableEntity() {};
 
     virtual void setSelected(bool s) { m_selected = s; };
@@ -37,6 +36,7 @@ public:
     virtual std::list<std::list<QPoint> > getListOfCurves() const = 0;
 
 protected:
+    int const CONTROL_POINT_RADIUS;
     bool m_selected;
 };
 

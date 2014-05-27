@@ -145,7 +145,6 @@ void RectangleEntity::paintEntity(QPainter& p) const {
         points[3] = QPoint(m_startPoint.x(), m_endPoint.y());
         points[4] = m_startPoint;
 
-        double completedLength = 0;
         for (int i=1; i<5; i++) {
             if (perimeterCompleted > 0) {
                 completed.push_back(points[i-1]);
@@ -191,16 +190,16 @@ void RectangleEntity::paintEntity(QPainter& p) const {
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
             Qt::PenJoinStyle(Qt::MiterJoin)));
-        p.drawEllipse(m_startPoint, 5, 5);
-        p.drawEllipse(QPoint(m_endPoint.x(), m_startPoint.y()), 5, 5);
-        p.drawEllipse(m_endPoint, 5, 5);
-        p.drawEllipse(QPoint(m_startPoint.x(), m_endPoint.y()), 5, 5);
+        p.drawEllipse(m_startPoint, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        p.drawEllipse(QPoint(m_endPoint.x(), m_startPoint.y()), CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        p.drawEllipse(m_endPoint, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
+        p.drawEllipse(QPoint(m_startPoint.x(), m_endPoint.y()), CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
 
         QPoint topMid((m_endPoint.x() + m_startPoint.x())/2, m_startPoint.y());
         QPoint botMid((m_endPoint.x() + m_startPoint.x())/2, m_endPoint.y());
         QPoint leftMid(m_startPoint.x(), (m_endPoint.y() + m_startPoint.y())/2);
         QPoint rightMid(m_endPoint.x(), (m_endPoint.y() + m_startPoint.y())/2);
-        QPoint delta(2,2);
+        QPoint delta(CONTROL_POINT_RADIUS, CONTROL_POINT_RADIUS);
 
         p.drawRect(QRect(topMid - delta, topMid + delta));
         p.drawRect(QRect(botMid - delta, botMid + delta));

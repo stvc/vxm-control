@@ -80,9 +80,7 @@ void CircleEntity::paintEntity(QPainter& p) const {
     }
     else {
         double percentComplete = (double) m_outlineStartTime.elapsed() / m_expectedTime;
-        double percentUncompleted = 1.0 - percentComplete;
         int completedAngle = qFloor((double) -360 * 16 * percentComplete + 0.5);
-        int uncompletedAngle = qFloor((double) -360 * 16 * percentUncompleted + 0.5);
         p.setPen(QPen(Qt::green, 2,
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
@@ -102,7 +100,7 @@ void CircleEntity::paintEntity(QPainter& p) const {
             Qt::PenStyle(Qt::SolidLine),
             Qt::PenCapStyle(Qt::FlatCap),
             Qt::PenJoinStyle(Qt::MiterJoin)));
-        p.drawEllipse(m_centerPoint, 5, 5);
+        p.drawEllipse(m_centerPoint, CONTROL_POINT_RADIUS * 2, CONTROL_POINT_RADIUS * 2);
 
         QPoint delta(2,2);
         QPoint cp(m_centerPoint.x() + m_radius, m_centerPoint.y());
