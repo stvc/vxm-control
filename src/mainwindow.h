@@ -94,8 +94,6 @@ private:
     bool m_entitiesQueuedForDrawing;
     std::list<DrawableEntity*> *m_entitiesToDraw;
     std::list<DrawableEntity*>::iterator m_currentEntity;
-
-    QSettings appSettings;
 };
 
 #endif

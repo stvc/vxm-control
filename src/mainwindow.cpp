@@ -4,8 +4,7 @@
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::MainWindow),
-    appSettings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller")
+    ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
@@ -36,8 +35,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     serialDialog = new SerialConfigDialog(this);
     // check if serial is already configured
-    if (!appSettings.value("serialDevice/portName").isNull())
-        serialDialog->setSerialDevice(appSettings.value("serialDevice/portName").toString());
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+    if (!settings.value("serialDevice/portName").isNull())
+        serialDialog->setSerialDevice(settings.value("serialDevice/portName").toString());
 
     cameraDialog = new CameraConfigDialog(this);
     labelConnectionStatus = new QLabel("Status: Not Connected");
@@ -106,7 +106,8 @@ void MainWindow::on_actionSerialConfig_triggered() {
     }
     if (serialDialog->exec()) {
         // save settings
-        appSettings.setValue("serialDevice/portName", serialDialog->getSerialSettings().portName);
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+        settings.setValue("serialDevice/portName", serialDialog->getSerialSettings().portName);
     }
 }
 
@@ -425,7 +426,8 @@ void MainWindow::refreshMoveBtnState() {
         return;
 
     // do nothing if controller hasn't been calibrated
-    if (appSettings.value("calibration/widthInSteps").isNull() || appSettings.value("calibration/heightInSteps").isNull())
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+    if (settings.value("calibration/widthInSteps").isNull() || settings.value("calibration/heightInSteps").isNull())
         return;
 
     // make sure that either user is moving manually, or user has drawn a shape
