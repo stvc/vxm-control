@@ -81,8 +81,7 @@ void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
     if (m_mode == Pointer) {
         if (m_selectedEntity != NULL) {
             if (!m_selectedEntity->isPointOnEntity(event->pos())) {
-                m_selectedEntity->setSelected(false);
-                m_selectedEntity = NULL;
+                deselectEntity();
             }
             else {
                 m_selectedEntity->selectControlPoint(event->pos());
@@ -105,7 +104,7 @@ void DrawableViewfinder::mousePressEvent(QMouseEvent* event) {
         m_selectedEntity->selectControlPoint(event->pos());
     }
     else if (m_mode == Circle) {
-        m_entities.push_back(new CircleEntity(event->pos()));
+        m_entities.push_back(new EllipseEntity(event->pos()));
         m_selectedEntity = m_entities.back();
         m_selectedEntity->setSelected(true);
         m_selectedEntity->selectControlPoint(event->pos());
@@ -208,6 +207,7 @@ void DrawableViewfinder::selectEntityAtPoint(QPoint p) {
 void DrawableViewfinder::deselectEntity() {
     if (m_selectedEntity != NULL) {
         m_selectedEntity->setSelected(false);
+        m_selectedEntity->setShiftKeyState(false);
         m_selectedEntity = NULL;
     }
 }

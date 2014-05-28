@@ -8,6 +8,7 @@
 #include "circleentity.h"
 #include "curveentity.h"
 #include "drawableentity.h"
+#include "ellipseentity.h"
 #include "lineentity.h"
 #include "polygonentity.h"
 #include "rectangleentity.h"

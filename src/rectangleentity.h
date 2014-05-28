@@ -23,7 +23,7 @@ public:
     virtual QPoint getStartPoint() const;
     virtual std::list<std::list<QPoint> > getListOfCurves() const;
 
-private:
+protected:
     enum ControlPoint { None, TranslateAll,
                         TopRightCorner, TopLeftCorner, BottomRightCorner, BottomLeftCorner,
                         LeftEdge, TopEdge, RightEdge, BottomEdge };

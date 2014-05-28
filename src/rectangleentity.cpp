@@ -18,7 +18,11 @@ RectangleEntity::~RectangleEntity() {
 }
 
 bool RectangleEntity::isPointOnEntity(QPoint p) const {
-    return (findControlPoint(p) != None);
+    ControlPoint cp = findControlPoint(p);
+    if (m_selected)
+        return (cp != None);
+    else
+        return (cp != None && cp != TranslateAll);
 }
 
 Qt::CursorShape RectangleEntity::getMouseCursorAtPosition(QPoint p) const {
@@ -273,7 +277,6 @@ RectangleEntity::ControlPoint RectangleEntity::findControlPoint(QPoint p) const 
         return BottomLeftCorner;
     }
 
-    //
     // bottom right corner
     if (calcDistance(p, m_endPoint) < 5.0) {
         return BottomRightCorner;
@@ -282,36 +285,29 @@ RectangleEntity::ControlPoint RectangleEntity::findControlPoint(QPoint p) const 
     // top edge
     if (p.y() > m_startPoint.y() - 5 && p.y() < m_startPoint.y() + 5
             && p.x() > m_startPoint.x() && p.x() < m_endPoint.x()) {
-        if (calcDistance(p, QPoint((m_endPoint.x() + m_startPoint.x())/2, m_startPoint.y())) < 5.0)
-            return TopEdge;
-        else
-            return TranslateAll;
+        return TopEdge;
     }
 
     // bottom edge
     if (p.y() > m_endPoint.y() - 5 && p.y() < m_endPoint.y() + 5
             && p.x() > m_startPoint.x() && p.x() < m_endPoint.x()) {
-        if (calcDistance(p, QPoint((m_startPoint.x() + m_endPoint.x())/2, m_endPoint.y())) < 5.0)
-            return BottomEdge;
-        else
-            return TranslateAll;
+        return BottomEdge;
     }
 
     // left edge
     if (p.x() > m_startPoint.x() - 5 && p.x() < m_startPoint.x() + 5
             && p.y() > m_startPoint.y() && p.y() < m_endPoint.y()) {
-        if (calcDistance(p, QPoint(m_startPoint.x(), (m_startPoint.y() + m_endPoint.y())/2)) < 5.0)
-            return LeftEdge;
-        else
-            return TranslateAll;
+        return LeftEdge;
     }
     // right edge
     if (p.x() > m_endPoint.x() - 5 && p.x() < m_endPoint.x() + 5
             && p.y() > m_startPoint.y() && p.y() < m_endPoint.y()) {
-        if (calcDistance(p, QPoint(m_endPoint.x(), (m_startPoint.y() + m_endPoint.y())/2)) < 5.0)
-            return RightEdge;
-        else
-            return TranslateAll;
+        return RightEdge;
+    }
+
+    if (p.x() > m_startPoint.x() && p.x() < m_endPoint.x()
+            && p.y() > m_startPoint.y() && p.y() < m_endPoint.y()) {
+        return TranslateAll;
     }
 
     return None;
