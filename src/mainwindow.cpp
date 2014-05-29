@@ -199,7 +199,8 @@ void MainWindow::on_btnMove_clicked() {
 
         m_currentEntity = m_entitiesToDraw->begin();
         shapeDrawer->freezeFrame(true);
-        drawEntity(*m_currentEntity, m_translator);
+        queueEntityForDrawing(*m_currentEntity, m_translator);
+        m_controllerProgramLoaded = true;
     }
 }
 
@@ -239,7 +240,8 @@ void MainWindow::controller_ready() {
         (*m_currentEntity)->setOutlined(true);
         m_currentEntity++;
         if (m_currentEntity != m_entitiesToDraw->end()) {
-            drawEntity(*m_currentEntity, m_translator);
+            queueEntityForDrawing(*m_currentEntity, m_translator);
+            m_controllerProgramLoaded = true;
         }
         else {
             m_entitiesQueuedForDrawing = false;
@@ -442,7 +444,7 @@ void MainWindow::refreshMoveBtnState() {
         this->ui->btnMove->setEnabled(true);
 }
 
-void MainWindow::drawEntity(DrawableEntity* ent, PointTranslator pt) {
+void MainWindow::queueEntityForDrawing(DrawableEntity* ent, PointTranslator pt) {
     controller->newQueue();
     controller->addSavePositionToQueue();
     controller->addMoveToQueue(pt.translatePoint(ent->getStartPoint()));
