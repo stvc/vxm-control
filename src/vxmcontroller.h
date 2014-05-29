@@ -51,6 +51,7 @@ public:
     void addOutputHighToQueue();
     void addOutputLowToQueue();
     double getEstimatedExecTime(); // in tenths of a milliseconds
+    void loadQueue();
     void execQueue();
 
     bool isSerialOpen();

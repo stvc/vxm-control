@@ -1,5 +1,9 @@
 QT += core gui widgets multimedia multimediawidgets serialport
 
+# If building with MSVC gives a "failure during conversion to COFF" error
+# Try enabling this line and rerunning qmake:
+#QMAKE_LFLAGS += /INCREMENTAL:NO
+
 SOURCES += src/main.cpp\
         src/mainwindow.cpp\
         src/serialconfigdialog.cpp\

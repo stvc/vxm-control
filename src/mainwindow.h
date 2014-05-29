@@ -92,6 +92,7 @@ private:
 
     PointTranslator m_translator;
     bool m_entitiesQueuedForDrawing;
+    bool m_controllerProgramLoaded;
     std::list<DrawableEntity*> *m_entitiesToDraw;
     std::list<DrawableEntity*>::iterator m_currentEntity;
 };

@@ -52,10 +52,22 @@ void VXMController::move(QPoint p) {
     MovementVect mv = generateMovementVect(p);
 
     std::ostringstream comm;
-    comm << "C" << std::endl; // start by clearning the previous program
-    comm << "S3M" << mv.xSpeed << ",S1M" << mv.ySpeed; // set the speeds for each motor
-    comm << ",(I3M" << mv.xDist << ",I1M" << mv.yDist << ",)"; // run both movement commands simultainiously
-    comm << ",R" << std::endl; // run program
+    comm << "C" << std::endl;
+
+    if (mv.xDist != 0 && mv.yDist != 0) {
+        comm << "(S3M" << mv.xSpeed << ",I" << mv.xDist;
+        comm << ",S1M" << mv.ySpeed << ",I" << mv.yDist << ",)R";
+    }
+    else if (mv.xDist != 0) { // yDist == 0
+        comm << "S3M" << mv.xSpeed << ",I" << mv.xDist << ",R";
+    }
+    else if (mv.yDist != 0) { // xDist == 0
+        comm << "S1M" << mv.ySpeed << ",I" << mv.yDist << ",R";
+    }
+    else { // xDist == 0 && yDist == 0
+    }
+
+    comm << std::endl;
 
     QByteArray data(comm.str().c_str());
 
@@ -143,8 +155,8 @@ double VXMController::getEstimatedExecTime() {
     return m_estimatedTime;
 }
 
-void VXMController::execQueue() {
-    if (m_queuedCurves.empty())
+void VXMController::loadQueue() {
+    if (m_queuedCommands.empty())
         return;
 
     emit serialBusy();
@@ -166,9 +178,22 @@ void VXMController::execQueue() {
                 sp[cpi] << "U99,";
                 inContinuousMode = false;
             }
+
             MovementVect mv = *line_it;
-            mp[0] << "(S3M" << mv.xSpeed << ",I" << mv.xDist
-                  << ",S1M" << mv.ySpeed << ",I" << mv.yDist << ",)";
+
+            if (mv.xDist != 0 && mv.yDist != 0) {
+                mp[0] << "(S3M" << mv.xSpeed << ",I" << mv.xDist;
+                mp[0] << ",S1M" << mv.ySpeed << ",I" << mv.yDist << ",)R";
+            }
+            else if (mv.xDist != 0) { // yDist == 0
+                mp[0] << "S3M" << mv.xSpeed << ",I" << mv.xDist << ",R";
+            }
+            else if (mv.yDist != 0) { // xDist == 0
+                mp[0] << "S1M" << mv.ySpeed << ",I" << mv.yDist << ",R";
+            }
+            else { // xDist == 0 && yDist == 0
+            }
+
             line_it++;
         }
         else if ((*command_it) == CURVE ) {
@@ -183,6 +208,7 @@ void VXMController::execQueue() {
                 mp[cpi] << "A1M10,U77,";
                 sp[cpi] << "A1M10,U77,";
                 inContinuousMode = true;
+                mp[0] << "PMA" << cpi << ",";
                 mp[0] << "JM" << cpi << ",";
             }
             std::list<MovementVect> mvs = *curve_it;
@@ -221,6 +247,13 @@ void VXMController::execQueue() {
         }
     }
 
+    if (inContinuousMode) {
+        // if still in continuous mode, leave it
+        mp[cpi] << "U99,";
+        sp[cpi] << "U99,";
+        inContinuousMode = false;
+    }
+
     // bring it all together
     std::ostringstream output;
     output << "F" << std::endl;
@@ -228,13 +261,19 @@ void VXMController::execQueue() {
         output << "[PM-" << i << "," << sp[i].str()
                << "]PM-" << i << "," << mp[i].str();
     }
-    output << "PM-0," << mp[0] << "R" << std::endl;
+    output << "PM-0," << mp[0].str() << "V" << std::endl;
 
     QByteArray finalProgram(output.str().c_str());
 
     // write program to serial
     if (loggedWrite(finalProgram) == -1)
         QMessageBox::critical(0, "Error", "Could not write to serial port");
+}
+
+void VXMController::execQueue() {
+    emit serialBusy();
+    if (loggedWrite("R\n") == -1)
+        QMessageBox::critical(0,"Error", "Could not write to serial port");
 }
 
 void VXMController::serialReadyReadSlot() {
@@ -274,14 +313,14 @@ int VXMController::loggedWrite(QByteArray data) {
 VXMController::MovementVect VXMController::generateMovementVect(QPoint p) {
     MovementVect r;
 
-    double dtime = lengthOfVect(p) / m_maxSpeed;
+    double dtime = (double) lengthOfVect(p) / m_maxSpeed;
 
     double xSpeed;
     double ySpeed;
 
     if (dtime > 0) {
-        xSpeed = p.x() / dtime;
-        ySpeed = p.y() / dtime;
+        xSpeed = (double) p.x() / dtime;
+        ySpeed = (double) p.y() / dtime;
     }
     else {
         xSpeed = 0;

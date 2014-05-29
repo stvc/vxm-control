@@ -68,6 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     m_tmpYStepsPerFOV = 1;
 
     m_entitiesQueuedForDrawing = false;
+    m_controllerProgramLoaded = false;
     crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
 
     camera->start();
@@ -229,6 +230,11 @@ void MainWindow::controller_ready() {
     if (m_calibrationStep > 0) {
         emit updateCalibrationStep();
     }
+    else if (m_controllerProgramLoaded) {
+        m_controllerProgramLoaded = false;
+        (*m_currentEntity)->startOutlining(controller->getEstimatedExecTime() / 10);
+        controller->execQueue();
+    }
     else if (m_entitiesQueuedForDrawing) {
         (*m_currentEntity)->setOutlined(true);
         m_currentEntity++;
@@ -243,6 +249,7 @@ void MainWindow::controller_ready() {
 
     }
     else {
+        refreshMoveBtnState();
     }
 }
 
@@ -437,6 +444,7 @@ void MainWindow::refreshMoveBtnState() {
 
 void MainWindow::drawEntity(DrawableEntity* ent, PointTranslator pt) {
     controller->newQueue();
+    controller->addSavePositionToQueue();
     controller->addMoveToQueue(pt.translatePoint(ent->getStartPoint()));
     controller->addOutputHighToQueue();
 
@@ -444,7 +452,7 @@ void MainWindow::drawEntity(DrawableEntity* ent, PointTranslator pt) {
     for (std::list<std::list<QPoint> >::iterator it = curves.begin(); it != curves.end(); it++) {
         std::list<QPoint> translatedControlPoints = pt.translatePoints(*it);
         std::list<QPoint> vects = controlPointsToVectors(translatedControlPoints);
-        if (it->size() == 1) { // first degree bezier curve (ie straight line)
+        if (vects.size() == 1) { // first degree bezier curve (ie straight line)
             controller->addMoveToQueue(vects.front());
         }
         else { // cubic bezier curve
@@ -453,8 +461,7 @@ void MainWindow::drawEntity(DrawableEntity* ent, PointTranslator pt) {
     }
     controller->addOutputLowToQueue();
     controller->addReturnToQueue();
-    ent->startOutlining(controller->getEstimatedExecTime() / 10);
-    controller->execQueue();
+    controller->loadQueue();
 }
 
 std::list<QPoint> MainWindow::controlPointsToVectors(std::list<QPoint> controlPoints) {
@@ -475,15 +482,15 @@ std::list<QPoint> MainWindow::controlPointsToVectors(std::list<QPoint> controlPo
 
         // convert from graph space to equation space
         //  coefficients:
-        int a = ps[3].x() - 3 * ps[2].x() + 3 * ps[1].x() - ps[0].x();
-        int b = 3 * ps[2].x() - 6 * ps[1].x() + 3 * ps[0].x();
-        int c = 3 * ps[1].x() - 3 * ps[0].x();
-        int d = ps[0].x();
+        double a = ps[3].x() - 3 * ps[2].x() + 3 * ps[1].x() - ps[0].x();
+        double b = 3 * ps[2].x() - 6 * ps[1].x() + 3 * ps[0].x();
+        double c = 3 * ps[1].x() - 3 * ps[0].x();
+        double d = ps[0].x();
 
-        int e = ps[3].y() - 3 * ps[2].y() + 3 * ps[1].y() - ps[0].y();
-        int f = 3 * ps[2].y() - 6 * ps[1].y() + 3 * ps[0].y();
-        int g = 3 * ps[1].y() - e * ps[0].y();
-        int h = ps[0].y();
+        double e = ps[3].y() - 3 * ps[2].y() + 3 * ps[1].y() - ps[0].y();
+        double f = 3 * ps[2].y() - 6 * ps[1].y() + 3 * ps[0].y();
+        double g = 3 * ps[1].y() - e * ps[0].y();
+        double h = ps[0].y();
 
         //  calculate set of points along the curve
         double x = 0;
@@ -491,7 +498,7 @@ std::list<QPoint> MainWindow::controlPointsToVectors(std::list<QPoint> controlPo
         double t = 0;
         std::list<QPoint> points;
         for (int i=0; i < 26; i++) {
-            t = i * 1/25;
+            t = (double) i * 1/25;
             x = (((a*t + b)*t) + c)*t + d;
             y = (((e*t + f)*t) + g)*t + h;
 
