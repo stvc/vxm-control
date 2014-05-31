@@ -104,6 +104,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(crosshairDialog, SIGNAL(crosshairConfigChanged(int, int)), this, SLOT(crosshair_position_updated(int,int)));
 
     connect(this, SIGNAL(updateCalibrationStep()), this, SLOT(calibration_step_updated()));
+    connect(this, SIGNAL(updateDrawStep()), this, SLOT(draw_step_updated()));
 }
 
 MainWindow::~MainWindow() {
@@ -229,8 +230,7 @@ void MainWindow::on_btnMove_clicked() {
 
         m_currentEntity = m_entitiesToDraw->begin();
         shapeDrawer->freezeFrame(true);
-        queueEntityForDrawing(*m_currentEntity, m_translator);
-        m_controllerProgramLoaded = true;
+        emit updateDrawStep();
     }
 }
 
@@ -261,11 +261,11 @@ void MainWindow::controller_ready() {
     if (m_calibrationStep > 0) {
         emit updateCalibrationStep();
     }
-    else if (m_controllerProgramLoaded) {
-        m_controllerProgramLoaded = false;
-        (*m_currentEntity)->startOutlining(controller->getEstimatedExecTime() / 10);
-        controller->execQueue();
+    else if (m_currentDrawStep > 0) {
+        emit updateDrawStep();
     }
+    // TODO: remove this
+    /*
     else if (m_entitiesQueuedForDrawing) {
         (*m_currentEntity)->setOutlined(true);
         m_currentEntity++;
@@ -280,6 +280,7 @@ void MainWindow::controller_ready() {
         }
 
     }
+    */
     else {
         refreshMoveBtnState();
     }
@@ -311,16 +312,33 @@ void MainWindow::entity_added() {
 void MainWindow::draw_step_updated() {
     m_currentDrawStep += 1;
     if (m_currentDrawStep == 1) {
+        controller->savePosition();
     }
     else if (m_currentDrawStep == 2) {
+        if (m_currentEntity != m_entitiesToDraw->end()) {
+            controller->move(m_translator.translatePoint((*m_currentEntity)->getStartPoint()));
+        }
+        else {
+            m_currentDrawStep = 0;
+            refreshMoveBtnState();
+            shapeDrawer->freezeFrame(false);
+        }
     }
     else if (m_currentDrawStep == 3) {
+        queueEntityForDrawing(*m_currentEntity, m_translator);
     }
     else if (m_currentDrawStep == 4) {
+        controller->execQueue();
+        (*m_currentEntity)->startOutlining(controller->getEstimatedExecTime() / 10);
     }
     else if (m_currentDrawStep == 5) {
+        (*m_currentEntity)->setOutlined(true);
+        controller->returnToSavedPosition();
     }
     else if (m_currentDrawStep == 6) {
+        m_currentEntity++;
+        m_currentDrawStep = 0;
+        emit updateDrawStep();
     }
 }
 
