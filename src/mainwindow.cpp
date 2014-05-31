@@ -45,6 +45,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->statusbar->addPermanentWidget(labelConnectionStatus);
 
     crosshairDialog = new CrosshairConfigDialog(this);
+    int savedX = settings.value("crosshairs/xpos").toInt();
+    int savedY = settings.value("crosshairs/ypos").toInt();
+    crosshairDialog->setCurrentSliderValues(savedX, savedY);
 
     // setup radio button Id numbers
     ui->btnGrpDirection->setId(ui->radioDown, VXMController::MOVE_DOWN);
