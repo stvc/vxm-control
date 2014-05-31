@@ -32,6 +32,7 @@ public:
 
     void setEntity(Entity);
     Entity getEntity();
+    void setCrosshairs(QPoint);
 
     bool isEntitySelected();
     void addEntity(DrawableEntity*);
@@ -55,6 +56,9 @@ signals:
 
 private:
     QImage* frame;
+
+    int m_crosshair_size;
+    QPoint m_crosshairs;
 
     Entity m_mode;
     DrawableEntity* m_selectedEntity;

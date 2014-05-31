@@ -6,6 +6,9 @@ DrawableViewfinder::DrawableViewfinder(QWidget *parent) :
     m_mode = Pointer;
     m_selectedEntity = NULL;
 
+    m_crosshair_size = 15;
+    m_crosshairs = QPoint(this->width() / 2, this->height() / 2);
+
     setAutoFillBackground(false);
 
     frame = new QImage(QSize(0,0), QImage::Format_ARGB32_Premultiplied);
@@ -38,10 +41,14 @@ void DrawableViewfinder::freezeFrame(bool b) {
 void DrawableViewfinder::paintEvent(QPaintEvent* /* event */) {
     QPainter painter(this);
     painter.drawImage(QPoint(0,0), *frame);
-    painter.setPen(QPen(Qt::green, 2,
+    painter.setPen(QPen(Qt::white, 2,
                 Qt::PenStyle(Qt::SolidLine),
                 Qt::PenCapStyle(Qt::FlatCap),
                 Qt::PenJoinStyle(Qt::MiterJoin)));
+    painter.drawLine(QPoint(m_crosshairs.x() - m_crosshair_size, m_crosshairs.y()),
+            QPoint(m_crosshairs.x() + m_crosshair_size, m_crosshairs.y()));
+    painter.drawLine(QPoint(m_crosshairs.x(), m_crosshairs.y() - m_crosshair_size),
+            QPoint(m_crosshairs.x(), m_crosshairs.y() + m_crosshair_size));
     painter.setBackground(Qt::NoBrush);
 
     if (!m_entities.empty() && m_mode != CalibrationMode) {
@@ -183,6 +190,11 @@ void DrawableViewfinder::setEntity(Entity e) {
 
 DrawableViewfinder::Entity DrawableViewfinder::getEntity() {
     return m_mode;
+}
+
+
+void DrawableViewfinder::setCrosshairs(QPoint p) {
+    m_crosshairs = p;
 }
 
 void DrawableViewfinder::addEntity(DrawableEntity* e) {

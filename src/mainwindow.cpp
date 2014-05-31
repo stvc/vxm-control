@@ -147,6 +147,7 @@ void MainWindow::on_btnCalibrate_clicked() {
         ui->btnGrpDrawType->buttonClicked(ui->btnGrpDrawType->checkedId());
     }
     else {
+        ui->btnCalibrate->setText("Cancel");
         ui->actionPointerTool->trigger();
         m_calibrationStep = 0;
         emit updateCalibrationStep();
@@ -257,7 +258,8 @@ void MainWindow::controller_ready() {
 
 void MainWindow::controller_busy() {
     this->ui->btnMove->setEnabled(false);
-    this->ui->btnCalibrate->setEnabled(false);
+    if (this->ui->btnCalibrate->text() != "Cancel")
+        this->ui->btnCalibrate->setEnabled(false);
 }
 
 void MainWindow::camera_error(QCamera::Error /* e */) {
@@ -410,7 +412,22 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
     geo.setHeight(ui->displayFrame->height());
     shapeDrawer->setGeometry(geo);
 
-    crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
+    QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+    double xchPos;
+    double ychPos;
+    if (settings.value("crosshairs/xpos").isNull())
+        xchPos = 0.5;
+    else
+        xchPos = settings.value("crosshairs/xpos").toDouble() / 100;
+
+    if (settings.value("crosshairs/ypos").isNull())
+        ychPos = 0.5;
+    else
+        ychPos = settings.value("crosshairs/ypos").toDouble() / 100;
+
+
+    crossHairs = QPoint(shapeDrawer->width() * xchPos, shapeDrawer->height() * ychPos);
+    shapeDrawer->setCrosshairs(crossHairs);
 
     if (m_calibrationStep > 0) {
         // if resizing the window while in calibration mode, cancel calibration
@@ -429,10 +446,13 @@ void MainWindow::toggleManualControls(bool b) {
 
 void MainWindow::refreshMoveBtnState() {
     this->ui->btnMove->setEnabled(false);
+    this->ui->btnCalibrate->setEnabled(false);
 
     // do nothing if controller isn't connected
     if (!this->controller->isSerialOpen())
         return;
+
+    this->ui->btnCalibrate->setEnabled(true);
 
     // do nothing if controller hasn't been calibrated
     QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");

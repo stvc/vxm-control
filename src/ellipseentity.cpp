@@ -75,7 +75,7 @@ void EllipseEntity::paintEntity(QPainter& p) const {
 }
 
 QPoint EllipseEntity::getStartPoint() const {
-    return QPoint((m_endPoint.x() - m_startPoint.x()) / 2, (m_endPoint.y() - m_startPoint.y()) / 2);
+    return QPoint((m_endPoint.x() + m_startPoint.x()) / 2, m_startPoint.y());
 }
 
 std::list<std::list<QPoint> > EllipseEntity::getListOfCurves() const {

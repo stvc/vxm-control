@@ -183,13 +183,13 @@ void VXMController::loadQueue() {
 
             if (mv.xDist != 0 && mv.yDist != 0) {
                 mp[0] << "(S3M" << mv.xSpeed << ",I" << mv.xDist;
-                mp[0] << ",S1M" << mv.ySpeed << ",I" << mv.yDist << ",)R";
+                mp[0] << ",S1M" << mv.ySpeed << ",I" << mv.yDist << ",)";
             }
             else if (mv.xDist != 0) { // yDist == 0
-                mp[0] << "S3M" << mv.xSpeed << ",I" << mv.xDist << ",R";
+                mp[0] << "S3M" << mv.xSpeed << ",I" << mv.xDist << ",";
             }
             else if (mv.yDist != 0) { // xDist == 0
-                mp[0] << "S1M" << mv.ySpeed << ",I" << mv.yDist << ",R";
+                mp[0] << "S1M" << mv.ySpeed << ",I" << mv.yDist << ",";
             }
             else { // xDist == 0 && yDist == 0
             }
@@ -293,7 +293,6 @@ void VXMController::serialReadyReadSlot() {
         emit serialReady();
 
     if (data == "^") {
-        loggedWrite("C\n");
         emit serialReady();
     }
 }
