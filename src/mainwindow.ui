@@ -445,6 +445,7 @@ location</string>
     </property>
     <addaction name="actionSerialConfig"/>
     <addaction name="actionCameraConfig"/>
+    <addaction name="actionCrosshairConfig"/>
    </widget>
    <addaction name="menu_File"/>
    <addaction name="menu_Connect"/>
@@ -563,11 +564,16 @@ location</string>
     <string>Curve Tool</string>
    </property>
   </action>
+  <action name="actionCrosshairConfig">
+   <property name="text">
+    <string>Crosshairs...</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
  <buttongroups>
-  <buttongroup name="btnGrpDirection"/>
   <buttongroup name="btnGrpDrawType"/>
+  <buttongroup name="btnGrpDirection"/>
  </buttongroups>
 </ui>

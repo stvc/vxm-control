@@ -44,6 +44,8 @@ MainWindow::MainWindow(QWidget *parent) :
     labelConnectionStatus->setMinimumWidth(200);
     ui->statusbar->addPermanentWidget(labelConnectionStatus);
 
+    crosshairDialog = new CrosshairConfigDialog(this);
+
     // setup radio button Id numbers
     ui->btnGrpDirection->setId(ui->radioDown, VXMController::MOVE_DOWN);
     ui->btnGrpDirection->setId(ui->radioUp, VXMController::MOVE_UP);
@@ -68,8 +70,20 @@ MainWindow::MainWindow(QWidget *parent) :
     m_tmpYStepsPerFOV = 1;
 
     m_entitiesQueuedForDrawing = false;
-    m_controllerProgramLoaded = false;
-    crossHairs = QPoint(shapeDrawer->width()/2, shapeDrawer->height()/2);
+    m_currentDrawStep = 0;
+
+    if (!settings.value("crosshairs/xpos").isNull() && !settings.value("crosshairs/ypos").isNull()) {
+        int x = shapeDrawer->width() * settings.value("crosshairs/xpos").toInt() / 100;
+        int y = shapeDrawer->height() * settings.value("crosshairs/ypos").toInt() / 100;
+        m_crosshairs = QPoint(x,y);
+    }
+    else {
+        int x = shapeDrawer->width() / 2;
+        int y = shapeDrawer->height() / 2;
+        settings.setValue("crosshairs/xpos", x);
+        settings.setValue("crosshairs/ypos", y);
+        m_crosshairs = QPoint(x,y);
+    }
 
     camera->start();
 
@@ -87,10 +101,9 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(toolbarActions, SIGNAL(triggered(QAction*)), this, SLOT(toolbar_action_triggered(QAction*)));
 
-    connect(this, SIGNAL(updateCalibrationStep()), this, SLOT(calibration_step_updated()));
+    connect(crosshairDialog, SIGNAL(crosshairConfigChanged(int, int)), this, SLOT(crosshair_position_updated(int,int)));
 
-    // temporary while I create the calibration routine
-//    ui->btnCalibrate->setEnabled(true);
+    connect(this, SIGNAL(updateCalibrationStep()), this, SLOT(calibration_step_updated()));
 }
 
 MainWindow::~MainWindow() {
@@ -122,6 +135,22 @@ void MainWindow::on_actionCameraConfig_triggered() {
         }
         camera->start();
         videoSurface->mirror(cameraDialog->getMirror());
+    }
+}
+void MainWindow::on_actionCrosshairConfig_triggered() {
+    if (crosshairDialog->exec()) {
+        ui->statusbar->showMessage("accepted");
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+        settings.setValue("crosshairs/xpos", crosshairDialog->getXSlideValue());
+        settings.setValue("crosshairs/ypos", crosshairDialog->getYSlideValue());
+    }
+    else {
+        ui->statusbar->showMessage("canceled");
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+        int x = settings.value("crosshairs/xpos").toInt();
+        int y = settings.value("crosshairs/ypos").toInt();
+        m_crosshairs = QPoint(shapeDrawer->width() * x / 100, shapeDrawer->height() * y / 100);
+        shapeDrawer->setCrosshairs(m_crosshairs);
     }
 }
 
@@ -186,7 +215,7 @@ void MainWindow::on_btnMove_clicked() {
         double xScale = settings.value("calibration/widthInSteps", 1).toDouble() / shapeDrawer->width();
         double yScale = settings.value("calibration/heightInSteps", 1).toDouble() / shapeDrawer->height();
         double skew = 0; // TODO: implement axis skew calibration
-        m_translator = PointTranslator(xScale, yScale, skew, crossHairs);
+        m_translator = PointTranslator(xScale, yScale, skew, m_crosshairs);
 
         m_entitiesToDraw = shapeDrawer->getListOfEntities();
         if (m_entitiesToDraw->size() == 0)
@@ -266,12 +295,33 @@ void MainWindow::camera_error(QCamera::Error /* e */) {
     this->ui->statusbar->showMessage("camera error");
 }
 
+void MainWindow::crosshair_position_updated(int x, int y) {
+    m_crosshairs = QPoint(shapeDrawer->width() * (double) x / 100, shapeDrawer->height() * (double) y / 100);
+    shapeDrawer->setCrosshairs(m_crosshairs);
+}
+
 void MainWindow::drawing_updated() {
     refreshMoveBtnState();
 }
 
 void MainWindow::entity_added() {
     ui->actionPointerTool->trigger();
+}
+
+void MainWindow::draw_step_updated() {
+    m_currentDrawStep += 1;
+    if (m_currentDrawStep == 1) {
+    }
+    else if (m_currentDrawStep == 2) {
+    }
+    else if (m_currentDrawStep == 3) {
+    }
+    else if (m_currentDrawStep == 4) {
+    }
+    else if (m_currentDrawStep == 5) {
+    }
+    else if (m_currentDrawStep == 6) {
+    }
 }
 
 void MainWindow::viewfinder_point_clicked() {
@@ -426,8 +476,8 @@ void MainWindow::resizeEvent(QResizeEvent* event) {
         ychPos = settings.value("crosshairs/ypos").toDouble() / 100;
 
 
-    crossHairs = QPoint(shapeDrawer->width() * xchPos, shapeDrawer->height() * ychPos);
-    shapeDrawer->setCrosshairs(crossHairs);
+    m_crosshairs = QPoint(shapeDrawer->width() * xchPos, shapeDrawer->height() * ychPos);
+    shapeDrawer->setCrosshairs(m_crosshairs);
 
     if (m_calibrationStep > 0) {
         // if resizing the window while in calibration mode, cancel calibration

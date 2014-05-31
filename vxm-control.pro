@@ -9,6 +9,7 @@ SOURCES += src/main.cpp\
         src/serialconfigdialog.cpp\
         src/vxmcontroller.cpp\
         src/cameraconfigdialog.cpp\
+        src/crosshairconfigdialog.cpp\
         src/drawableviewfinder.cpp\
         src/customvideosurface.cpp\
         src/rectangleentity.cpp\
@@ -23,6 +24,7 @@ HEADERS += src/mainwindow.h\
         src/serialconfigdialog.h\
         src/vxmcontroller.h\
         src/cameraconfigdialog.h\
+        src/crosshairconfigdialog.h\
         src/drawableviewfinder.h\
         src/customvideosurface.h\
         src/drawableentity.h\
@@ -36,7 +38,8 @@ HEADERS += src/mainwindow.h\
 
 FORMS += src/mainwindow.ui\
         src/serialconfigdialog.ui\
-        src/cameraconfigdialog.ui
+        src/cameraconfigdialog.ui\
+        src/crosshairconfigdialog.ui
 
 RESOURCES = resources/resource.qrc
 

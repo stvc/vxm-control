@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include "cameraconfigdialog.h"
+#include "crosshairconfigdialog.h"
 #include "customvideosurface.h"
 #include "drawableviewfinder.h"
 #include "pointtranslator.h"
@@ -35,6 +36,7 @@ private slots:
     void on_actionE_xit_triggered();
     void on_actionSerialConfig_triggered();
     void on_actionCameraConfig_triggered();
+    void on_actionCrosshairConfig_triggered();
 
     void on_btnConnect_clicked();
     void on_btnCalibrate_clicked();
@@ -51,13 +53,16 @@ private slots:
 
     void camera_error(QCamera::Error);
 
+    void crosshair_position_updated(int, int);
     void drawing_updated();
     void entity_added();
+    void draw_step_updated();
     void viewfinder_point_clicked();
     void calibration_step_updated();
     void toolbar_action_triggered(QAction*);
 
 signals:
+    void updateDrawStep();
     void updateCalibrationStep();
 
 protected:
@@ -74,6 +79,7 @@ private:
     Ui::MainWindow *ui;
     SerialConfigDialog *serialDialog;
     CameraConfigDialog *cameraDialog;
+    CrosshairConfigDialog *crosshairDialog;
 
     QCamera *camera;
     CustomVideoSurface *videoSurface;
@@ -82,7 +88,7 @@ private:
     QLabel *labelConnectionStatus;
     VXMController *controller;
 
-    QPoint crossHairs;
+    QPoint m_crosshairs;
 
     // stuff for calibrating controller
     int    m_calibrationStep;
@@ -92,7 +98,7 @@ private:
 
     PointTranslator m_translator;
     bool m_entitiesQueuedForDrawing;
-    bool m_controllerProgramLoaded;
+    int  m_currentDrawStep;
     std::list<DrawableEntity*> *m_entitiesToDraw;
     std::list<DrawableEntity*>::iterator m_currentEntity;
 };
