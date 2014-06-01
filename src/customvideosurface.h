@@ -5,6 +5,10 @@
 #include <QAbstractVideoSurface>
 #include <QVideoSurfaceFormat>
 
+/**
+ * This class is used in conjunction with the DrawableViewfinder class and
+ * converts each frame to a QImage so it is ready for further manipulation.
+ */
 class CustomVideoSurface : public QAbstractVideoSurface
 {
     Q_OBJECT

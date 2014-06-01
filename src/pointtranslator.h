@@ -4,6 +4,9 @@
 #include <list>
 #include <QPoint>
 
+/**
+ * This class converts points in pixel-space to points in controller-space
+ */
 class PointTranslator {
 
 public:

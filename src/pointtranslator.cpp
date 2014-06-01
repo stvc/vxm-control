@@ -8,6 +8,9 @@ PointTranslator::PointTranslator() {
 }
 
 PointTranslator::PointTranslator(double xScale, double yScale, double skew, QPoint crosshairs) {
+    // TODO: change to use linear transformations instead of just simply
+    // scaling the X and Y axes. This will allow for rotations, as well as axis
+    // inversions.
     m_xScale = xScale;
     m_yScale = yScale;
     m_axisSkew = skew;

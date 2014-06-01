@@ -50,10 +50,6 @@ MainWindow::MainWindow(QWidget *parent) :
     crosshairDialog->setCurrentSliderValues(savedX, savedY);
 
     // setup radio button Id numbers
-    ui->btnGrpDirection->setId(ui->radioDown, VXMController::MOVE_DOWN);
-    ui->btnGrpDirection->setId(ui->radioUp, VXMController::MOVE_UP);
-    ui->btnGrpDirection->setId(ui->radioLeft, VXMController::MOVE_LEFT);
-    ui->btnGrpDirection->setId(ui->radioRight, VXMController::MOVE_RIGHT);
     ui->btnGrpDrawType->setId(ui->radioDrawManual, MANUAL_MOVE);
     ui->btnGrpDrawType->setId(ui->radioDrawShapes, DRAW_ENTITIES);
 

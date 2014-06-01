@@ -7,12 +7,17 @@
 #include <QPoint>
 #include <QtSerialPort/QSerialPort>
 
+/**
+ * This class is the main interface class to the hardware controller
+ *
+ * It handles the serial connection and the conversion of high-level method
+ * calls to controller commands.
+ */
 class VXMController : public QObject {
 
     Q_OBJECT
 
 public:
-    enum Direction { MOVE_UP, MOVE_DOWN, MOVE_LEFT, MOVE_RIGHT };
     struct SerialSettings {
         QString portName;
         qint32 baudRate;
@@ -22,8 +27,8 @@ public:
         QSerialPort::FlowControl flowControl;
     };
 
-    enum CommandType { LINE, CURVE, PAUSE, SAVE_POSITION, RETURN_TO_SAVED_POSITION,/* START_CONTINUOUS_MODE,
-        END_CONTINUOUS_MODE,*/ OUTPUT_HIGH, OUTPUT_LOW };
+    enum CommandType { LINE, CURVE, PAUSE, SAVE_POSITION,
+        RETURN_TO_SAVED_POSITION, OUTPUT_HIGH, OUTPUT_LOW };
 
     struct MovementVect {
         int time; // in tenths of a millisecond
@@ -48,10 +53,18 @@ public:
     void addMoveToQueue(QPoint); // QPoint is a vector
     void addCurveToQueue(std::list<QPoint>); // curve is list of vectors (relative points, not absolute)
     void addPauseToQueue(int); // pause for tenths of a millisecond
+
+    // these methods are for making use of user outputs on the controller in
+    // order to control external machinery
     void addOutputHighToQueue();
     void addOutputLowToQueue();
+
     double getEstimatedExecTime(); // in tenths of a milliseconds
+
+    // compile command queue and load it onto the controller
     void loadQueue();
+
+    // execute the program
     void execQueue();
 
     bool isSerialOpen();
