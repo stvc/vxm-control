@@ -57,11 +57,18 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->btnGrpDrawType->setId(ui->radioDrawManual, MANUAL_MOVE);
     ui->btnGrpDrawType->setId(ui->radioDrawShapes, DRAW_ENTITIES);
 
-
-    QList<QByteArray> cameraDevices = QCamera::availableDevices();
-    camera = new QCamera(cameraDevices.first());
     shapeDrawer = new DrawableViewfinder();
     videoSurface = new CustomVideoSurface(shapeDrawer, this);
+
+    QList<QByteArray> cameraDevices = QCamera::availableDevices();
+    if (cameraDevices.contains(settings.value("camera/device").toByteArray())) {
+        camera = new QCamera(settings.value("camera/device").toByteArray());
+        if (!settings.value("camera/mirrored").isNull())
+            videoSurface->mirror(settings.value("camera/mirrored").toBool());
+    }
+    else
+        camera = new QCamera(cameraDevices.first());
+
     camera->setViewfinder(videoSurface);
 
     QVBoxLayout *l = new QVBoxLayout();
@@ -72,7 +79,6 @@ MainWindow::MainWindow(QWidget *parent) :
     m_tmpXStepsPerFOV = 1;
     m_tmpYStepsPerFOV = 1;
 
-    m_entitiesQueuedForDrawing = false;
     m_currentDrawStep = 0;
 
     if (!settings.value("crosshairs/xpos").isNull() && !settings.value("crosshairs/ypos").isNull()) {
@@ -131,6 +137,8 @@ void MainWindow::on_actionSerialConfig_triggered() {
 
 void MainWindow::on_actionCameraConfig_triggered() {
     if (cameraDialog->exec()) {
+        QSettings settings(QSettings::IniFormat, QSettings::UserScope, "vxmcontroller");
+        settings.setValue("camera/device",cameraDialog->getDevice());
         camera->stop();
         if (cameraDialog->getDevice().length() > 0) {
             delete camera;
@@ -225,14 +233,13 @@ void MainWindow::on_btnMove_clicked() {
         if (m_entitiesToDraw->size() == 0)
             return;
 
-        m_entitiesQueuedForDrawing = true;
-
+        // display all entities as not outlined
         for (std::list<DrawableEntity*>::iterator it = m_entitiesToDraw->begin(); it != m_entitiesToDraw->end(); it++) {
             (*it)->setOutlined(false);
         }
 
+        // set up iterator, and start draw process
         m_currentEntity = m_entitiesToDraw->begin();
-        shapeDrawer->freezeFrame(true);
         emit updateDrawStep();
     }
 }
@@ -267,23 +274,6 @@ void MainWindow::controller_ready() {
     else if (m_currentDrawStep > 0) {
         emit updateDrawStep();
     }
-    // TODO: remove this
-    /*
-    else if (m_entitiesQueuedForDrawing) {
-        (*m_currentEntity)->setOutlined(true);
-        m_currentEntity++;
-        if (m_currentEntity != m_entitiesToDraw->end()) {
-            queueEntityForDrawing(*m_currentEntity, m_translator);
-            m_controllerProgramLoaded = true;
-        }
-        else {
-            m_entitiesQueuedForDrawing = false;
-            shapeDrawer->freezeFrame(false);
-            refreshMoveBtnState();
-        }
-
-    }
-    */
     else {
         refreshMoveBtnState();
     }
@@ -315,30 +305,59 @@ void MainWindow::entity_added() {
 void MainWindow::draw_step_updated() {
     m_currentDrawStep += 1;
     if (m_currentDrawStep == 1) {
-        controller->savePosition();
-    }
-    else if (m_currentDrawStep == 2) {
+        // check if there are any entities to be drawn,
         if (m_currentEntity != m_entitiesToDraw->end()) {
-            controller->move(m_translator.translatePoint((*m_currentEntity)->getStartPoint()));
+            // if there are, save current position, freeze the current frame,
+            // and wait for "ready" from controller
+            controller->savePosition();
+            shapeDrawer->freezeFrame(true);
         }
         else {
+            // if there aren't, reset draw state and resume video input
             m_currentDrawStep = 0;
             refreshMoveBtnState();
             shapeDrawer->freezeFrame(false);
         }
     }
+    else if (m_currentDrawStep == 2) {
+        // move controller to the correct position
+        controller->move(m_translator.translatePoint((*m_currentEntity)->getStartPoint()));
+    }
     else if (m_currentDrawStep == 3) {
-        queueEntityForDrawing(*m_currentEntity, m_translator);
+        // start a new controller Command Queue, and add each of entity's
+        // curves to it, then load queue onto controller and wait for a "ready"
+        // signal
+
+        controller->newQueue();
+        controller->addOutputHighToQueue();
+
+        std::list<std::list<QPoint> > curves =  (*m_currentEntity)->getListOfCurves();
+        for (std::list<std::list<QPoint> >::iterator it = curves.begin(); it != curves.end(); it++) {
+            std::list<QPoint> translatedControlPoints = m_translator.translatePoints(*it);
+            std::list<QPoint> vects = controlPointsToVectors(translatedControlPoints);
+            if (vects.size() == 1) { // first degree bezier curve (ie straight line)
+                controller->addMoveToQueue(vects.front());
+            }
+            else { // cubic bezier curve
+                controller->addCurveToQueue(vects);
+            }
+        }
+        controller->addOutputLowToQueue();
+
+        controller->loadQueue();
     }
     else if (m_currentDrawStep == 4) {
-        controller->execQueue();
+        // program is loaded, so begin outlining entity and execute it
         (*m_currentEntity)->startOutlining(controller->getEstimatedExecTime() / 10);
+        controller->execQueue();
     }
     else if (m_currentDrawStep == 5) {
+        // done outlining, return to origin
         (*m_currentEntity)->setOutlined(true);
         controller->returnToSavedPosition();
     }
     else if (m_currentDrawStep == 6) {
+        // now done with this entity, move onto the next,
         m_currentEntity++;
         m_currentDrawStep = 0;
         emit updateDrawStep();
@@ -533,28 +552,6 @@ void MainWindow::refreshMoveBtnState() {
     // make sure that either user is moving manually, or user has drawn a shape
     if (shapeDrawer->getListOfEntities()->size() > 0 || this->ui->radioDrawManual->isChecked())
         this->ui->btnMove->setEnabled(true);
-}
-
-void MainWindow::queueEntityForDrawing(DrawableEntity* ent, PointTranslator pt) {
-    controller->newQueue();
-    controller->addSavePositionToQueue();
-    controller->addMoveToQueue(pt.translatePoint(ent->getStartPoint()));
-    controller->addOutputHighToQueue();
-
-    std::list<std::list<QPoint> > curves =  ent->getListOfCurves();
-    for (std::list<std::list<QPoint> >::iterator it = curves.begin(); it != curves.end(); it++) {
-        std::list<QPoint> translatedControlPoints = pt.translatePoints(*it);
-        std::list<QPoint> vects = controlPointsToVectors(translatedControlPoints);
-        if (vects.size() == 1) { // first degree bezier curve (ie straight line)
-            controller->addMoveToQueue(vects.front());
-        }
-        else { // cubic bezier curve
-            controller->addCurveToQueue(vects);
-        }
-    }
-    controller->addOutputLowToQueue();
-    controller->addReturnToQueue();
-    controller->loadQueue();
 }
 
 std::list<QPoint> MainWindow::controlPointsToVectors(std::list<QPoint> controlPoints) {

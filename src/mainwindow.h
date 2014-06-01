@@ -71,7 +71,6 @@ protected:
 private:
     void toggleManualControls(bool);
     void refreshMoveBtnState();
-    void queueEntityForDrawing(DrawableEntity*, PointTranslator);
     std::list<QPoint> controlPointsToVectors(std::list<QPoint>);
 
     QActionGroup *toolbarActions;
