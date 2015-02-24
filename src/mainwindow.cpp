@@ -83,10 +83,10 @@ MainWindow::MainWindow(QWidget *parent) :
         m_crosshairs = QPoint(x,y);
     }
     else {
+        settings.setValue("crosshairs/xpos", 50);
+        settings.setValue("crosshairs/ypos", 50);
         int x = shapeDrawer->width() / 2;
         int y = shapeDrawer->height() / 2;
-        settings.setValue("crosshairs/xpos", x);
-        settings.setValue("crosshairs/ypos", y);
         m_crosshairs = QPoint(x,y);
     }
 
